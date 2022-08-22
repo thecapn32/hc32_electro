@@ -157,7 +157,7 @@ void Tim1_IRQHandler(void)
         if(i == 0)
         {
             i = 1;
-						w_logic0 = 1;
+			w_logic0 = 1;
         }
         else
         {
