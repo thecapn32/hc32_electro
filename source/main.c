@@ -66,7 +66,7 @@ volatile uint32_t VBAT;
 volatile uint32_t V_SEN;
 volatile uint32_t T_SEN;
 volatile uint32_t I_SEN;
-
+/*t*/
 
 volatile int press_count;
 /* sw1 pressed flag for timer0 */
@@ -125,7 +125,7 @@ int32_t main(void)
 						
             /* here also do DAC calibration */
 						
-            App_DacCali();
+            //App_DacCali();
 						buzz_en = 1;
 						delay1ms(1000);
 						buzz_en = 0;
