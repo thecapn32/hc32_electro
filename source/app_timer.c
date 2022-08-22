@@ -44,62 +44,6 @@ extern volatile int w_logic0;
 extern volatile int w_logic1;
 
 
-/* take long press action according to device state */
-static void long_press_action()
-{
-    switch (state)
-    {
-        case WAKEUP:
-            sleep = 1;
-            break;
-        case RUNNING:
-            pause = 1;
-            break;
-        case PAUSE:
-            sleep = 1;
-            break;
-        case SLEEP:
-            wake = 1;
-            break;
-        default:
-            break;
-    }
-}
-
-
-/* this function if for ON_OFF button */
-static void check_onoff(void)
-{
-    press_count++;
-    // if passed 3sec
-    if(press_count == 300) //period is 10ms 
-    {
-        // disable timer interrupt function
-        onOff_interrupt = 0;
-        // take action acording to state
-        long_press_action();
-    }
-    //if the button is released -> single click
-    else if(TRUE == Gpio_GetInputIO(onOffPort, onOffPin))
-    { 
-        // disable timer interrupt function
-        onOff_interrupt = 0;
-        // if single click detected in sleep state go back to sleep
-        if(state == SLEEP)
-        {
-            sleep = 1;
-        }
-        else if(state == WAKEUP || state == PAUSE)
-        {
-            run = 1;
-        }
-        else if(state == RUNNING)
-        {
-            pause = 1;
-        }
-    }
-    
-}
 
 
 /* Timer0 callback, called every 10ms */
