@@ -50,10 +50,10 @@ extern volatile int w_logic1;
 void Tim0_IRQHandler(void)
 {
     /* for toggling buzzer */
-    static int bz;
+    
     if(TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
-				timer0_callback = 1;
+	    timer0_callback = 1;
         Bt_ClearIntFlag(TIM0,BtUevIrq);
     }
 }

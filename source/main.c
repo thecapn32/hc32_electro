@@ -78,7 +78,8 @@ volatile uint32_t V_SEN;
 volatile uint32_t T_SEN;
 volatile uint32_t I_SEN;
 /*t*/
-
+/* for buzzer */
+static int bz;
 volatile int press_count = 0;
 /* sw1 pressed flag for timer0 */
 volatile int onOff_interrupt = 0;
