@@ -124,7 +124,7 @@ void App_Timer1Cfg()
     
     stcBtBaseCfg.enWorkMode = BtWorkMode0;
     stcBtBaseCfg.enCT       = BtTimer;
-    stcBtBaseCfg.enPRS      = BtPCLKDiv1; /* max freq 600Hz */
+    stcBtBaseCfg.enPRS      = BtPCLKDiv256; /* max freq 600Hz */
     stcBtBaseCfg.enCntMode  = Bt16bitArrMode;
     stcBtBaseCfg.bEnTog     = FALSE;
     stcBtBaseCfg.bEnGate    = FALSE;

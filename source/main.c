@@ -61,11 +61,11 @@ volatile int wave = 0;
 /* for making buzzer buzz */
 volatile int buzz_en = 0;
 
-const uint32_t l_duration[18] = {30, 5, 30, 5, 240, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
+const uint32_t l_duration[18] = {10, 5, 10, 5, 10, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
 
-const uint32_t s_duration[18] = {30, 5, 30, 5, 120, 2, 90, 3, 90, 5, 60, 5, 180, 180, 30, 5, 30, 30};
+const uint32_t s_duration[18] = {5, 5, 5, 5, 5, 2, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
 
-const uint16_t freq[18] = {1666, 0, 2000, 0, 3333, 0, 50000, 0, 10, 0, 1, 0, 10, 8, 3, 0, 100, 5};
+const uint16_t freq[18] = {13, 0, 15, 0, 25, 0, 390, 0, 781, 0, 0xffff, 0, 9765, 26039, 78, 0, 100, 1562};
 
 const uint32_t dacCur_r[18] = {20, 0, 20, 0, 20, 0, 100, 0, 20, 0, 80, 0, 50, 80, 50, 0, 50, 100};
 
@@ -149,6 +149,7 @@ static void check_onoff(void)
   }
 }
 
+
 static void beep(int t)
 {
   buzz_en = 1;
@@ -173,6 +174,7 @@ static int get_dacVal_index(void)
     return -1;
   }
 }
+
 
 static void check_state_signal(void)
 {
@@ -211,7 +213,7 @@ static void check_state_signal(void)
     logic0 = 0;
     logic1 = 4000;
     /* get the period value of timer1 for first phase */
-    uint16_t u16Period = 2 * freq[0];
+    uint16_t u16Period = freq[0];
     /* Run timer1 for generate wave values on DAC */
     Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
     /* must be set in every phase */
@@ -321,15 +323,14 @@ int32_t main(void)
       {
         /* this counts number of times wave could run */
         phase_cnt++;
-        uint32_t target = (wave) ? l_duration[phase_index] : s_duration[phase_index];
         /* check if it is passed half of phase duration */
         if (phase_cnt >= phase_cnt_target * 50)
         {
           /* dac value should be changed to positive current */
-          // if(freq[phase_index] != 0)
-          // {
-          //     logic1 = dacCal[8 - get_dacVal_index()];
-          //}
+          if(freq[phase_index] != 0)
+          {
+               logic1 = dacCal[8 - get_dacVal_index()];
+          }
         }
         if (phase_cnt == phase_cnt_target * 100)
         {
@@ -344,17 +345,16 @@ int32_t main(void)
             /* if phase frequency is 0 (Idle phase) */
             if (freq[phase_index] == 0)
             {
-              logic1 = 1900;
-              logic0 = 1900;
+              logic1 = logic0;
             }
             else
             {
-              // logic1 = dacCal[get_dacVal_index()];
-              logic1 = 0;
-              logic0 = 4000;
+              logic1 = dacCal[get_dacVal_index()];
+              
               /* change timer frequency */
               Bt_M0_Stop(TIM1);
-              uint16_t u16Period = freq[phase_index] * 2;
+							
+              uint16_t u16Period = freq[phase_index] ;
               /* Run timer1 for generate wave values on DAC */
               Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
               /* must be set in every phase */
