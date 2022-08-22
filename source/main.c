@@ -283,14 +283,14 @@ int32_t main(void)
   App_DACInit();
   App_Timer0Cfg();
   App_Timer1Cfg();
-	state = RUNNING;
+	
   /* enable interrupt on on_off button */
   /* enable interrupt on chrg */
   /* enable interrupt on usb_detect */
   // lowPowerGpios();
   // Lpm_GotoDeepSleep(FALSE);
   /* */
-  run = 0;
+  run = 1;
 
   // App_AdcInit();
   while (1)
