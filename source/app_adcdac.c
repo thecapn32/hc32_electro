@@ -80,12 +80,12 @@ void App_DacCali(void)
         Adc_SGL_Start();
         delay1ms(100);
 				get_val = Dac_GetDataOutputValue();
-        if((int)current + 5 >= dacCur[i]  )
+        if((int)current + 5 >= dacCur[i] && (int)current - 5 <= dacCur[i])
         {
             delay1ms(100);
             Adc_SGL_Start();
             delay1ms(10);
-            if((int)current + 5 >= dacCur[i])
+            if((int)current + 5 >= dacCur[i] && (int)current - 5 <= dacCur[i])
             {
                 // save the calculated value somewhere 
                 dacCal[i] = test_val;
