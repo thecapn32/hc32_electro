@@ -52,7 +52,7 @@ void App_DACInit(void)
     dac_initstruct.boff_t = DacBoffDisable;
     dac_initstruct.ten_t  = DacTenEnable;
     dac_initstruct.sref_t = DacVoltageExRef;
-    dac_initstruct.mamp_t = DacMenp4095;
+    dac_initstruct.mamp_t = DacMenp03;
     dac_initstruct.tsel_t = DacSwTriger;
     dac_initstruct.align  = DacRightAlign;
     Dac_Init(&dac_initstruct);
@@ -73,19 +73,19 @@ void App_DacCali(void)
     while(1)
     {
         Dac_SetChannelData(DacRightAlign, DacBit12, test_val);
-				delay1ms(100);
-        //test_val++;
+				delay1ms(10);
+        test_val++;
         Dac_SoftwareTriggerCmd();
         delay1ms(100);
         Adc_SGL_Start();
         delay1ms(100);
 				get_val = Dac_GetDataOutputValue();
-        /* if((int)current >= dacCur[i])
+        if((int)current + 5 >= dacCur[i]  )
         {
             delay1ms(100);
             Adc_SGL_Start();
             delay1ms(10);
-            if((int)current >= dacCur[i])
+            if((int)current + 5 >= dacCur[i])
             {
                 // save the calculated value somewhere 
                 dacCal[i] = test_val;
@@ -93,7 +93,7 @@ void App_DacCali(void)
                 if(i > 8)
                     break;
             }
-        }*/
+        }
     }
 }
 
