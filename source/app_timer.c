@@ -44,8 +44,6 @@ extern volatile int w_logic0;
 extern volatile int w_logic1;
 
 
-
-
 /* take long press action according to device state */
 static void long_press_action()
 {
@@ -112,24 +110,6 @@ void Tim0_IRQHandler(void)
     if(TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
 				timer0_callback = 1;
-        /* for on_off button */
-        if(onOff_interrupt)
-        {
-            check_onoff();
-        }
-        if(buzz_en)
-        {
-            if(bz == 0) 
-            {
-                bz++;
-                Gpio_SetIO(buzzPort, buzzPin);
-            }
-            else 
-            {
-                bz = 0;
-                Gpio_ClrIO(buzzPort, buzzPin);
-            }
-        }
         Bt_ClearIntFlag(TIM0,BtUevIrq);
     }
 }
@@ -192,8 +172,6 @@ void Tim1_IRQHandler(void)
 /* timer for generating waves PCLK (1/4Mhz/32) */
 void App_Timer1Cfg()
 {
-    uint16_t                  u16ArrValue;
-    uint16_t                  u16CntValue;
     stc_bt_mode0_cfg_t     stcBtBaseCfg;
     
     DDL_ZERO_STRUCT(stcBtBaseCfg);

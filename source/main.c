@@ -145,6 +145,24 @@ int32_t main(void)
 				if(timer0_callback)
 				{
 						timer0_callback = 0;
+						/* for on_off button */
+						if(onOff_interrupt)
+						{
+							check_onoff();
+						}
+						if(buzz_en)
+						{
+							if(bz == 0) 
+							{
+                bz++;
+                Gpio_SetIO(buzzPort, buzzPin);
+							}
+							else 
+							{
+                bz = 0;
+                Gpio_ClrIO(buzzPort, buzzPin);
+							}
+        }
 						if(state == RUNNING)
 						{
 							/* this counts number of times wave could run */
@@ -197,6 +215,7 @@ int32_t main(void)
                 }
 							}
 					}
+					
 				}
         if(wake)
         {
