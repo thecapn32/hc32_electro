@@ -58,9 +58,9 @@ void App_DACInit(void)
     Dac_Init(&dac_initstruct);
     Dac_Cmd(TRUE);
     /* write data */
-    // Dac_SetChannelData(DacRightAlign, DacBit12, 0);
+    Dac_SetChannelData(DacRightAlign, DacBit12, 0);
     /* trigger by sw */
-    // Dac_SoftwareTriggerCmd();
+    Dac_SoftwareTriggerCmd();
 }
 
 
