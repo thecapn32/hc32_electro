@@ -11,7 +11,6 @@ extern int state;
 /* variables for  */
 extern volatile int press_count;
 extern volatile int onOff_interrupt;
-extern volatile int phase_cnt;
 extern volatile int wave_run;
 
 /* selected wave for */
@@ -19,6 +18,10 @@ extern volatile int wave;
 
 /* hold number of current phase in running state */
 extern volatile int phase_index;
+/* hold the number 10ms passed since start of current phase*/
+extern volatile int phase_cnt;
+/* this is used by timer0 callback for controling duration of phase */
+extern volatile uint32_t phase_cnt_target;
 
 /* signal variables for interrupt to main thread communication */
 extern volatile int wake;
@@ -123,7 +126,7 @@ void Tim0_IRQHandler(void)
             phase_cnt++;
             uint32_t target = (wave)? l_duration[phase_index]:s_duration[phase_index];
             /* check if it is passed half of phase duration */
-            if(phase_cnt >= target * 50)
+            if(phase_cnt >= phase_cnt_target * 50)
             {
                 /* dac value should be changed to positive current */
                 if(freq[phase_index] != 0)
@@ -131,14 +134,17 @@ void Tim0_IRQHandler(void)
                     logic1 = dacCal[8 - get_dacVal_index()];
                 }
             }
-            if(phase_cnt == target * 100)
+            if(phase_cnt == phase_cnt_target * 100)
             {
                 /* Here should be where the values must be changed for running next phase */
                 /* change dac values here */
                 phase_index++;
+                /* if any phase remains */
                 if(phase_index < 18)
                 {
                     phase_cnt = 0;
+                    phase_cnt_target = phase_cnt_target = (wave)? l_duration[phase_index]:s_duration[phase_index];
+                    /* if phase frequency is 0 (Idle phase) */
                     if(freq[phase_index] == 0)
                     {    
                         logic1 = logic0;
@@ -244,7 +250,7 @@ void Tim1_IRQHandler(void)
 
 
 /* timer for generating waves PCLK (1/4Mhz/32) */
-void App_Timer1Cfg(uint16_t u16Period)
+void App_Timer1Cfg()
 {
     uint16_t                  u16ArrValue;
     uint16_t                  u16CntValue;

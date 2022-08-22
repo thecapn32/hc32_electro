@@ -37,7 +37,11 @@ volatile int sleep = 0;
 volatile int change_wave = 0;
 
 /* hold number of current phase in running state */
-volatile int phase_index;
+volatile uint32_t phase_index;
+/* hold the number 10ms passed since start of current phase */
+volatile uint32_t phase_cnt;
+/* this is used by timer0 callback for controling duration of phase */
+volatile uint32_t phase_cnt_target;
 
 volatile uint16_t logic0;
 volatile uint16_t logic1;
@@ -71,8 +75,7 @@ volatile uint32_t I_SEN;
 volatile int press_count;
 /* sw1 pressed flag for timer0 */
 volatile int onOff_interrupt;
-/* running stage phase duration count */
-volatile uint32_t phase_cnt;
+
 /* in pause state count */
 volatile uint32_t pause_cnt;
 
@@ -95,9 +98,9 @@ int32_t main(void)
     /* ADC unit init */
     // App_AdcInit();
     /* Timer0 init */
-    //App_Timer0Cfg();
 
-    //App_Timer1Cfg();
+    App_Timer0Cfg();
+    App_Timer1Cfg();
 	
 	
     /* enable interrupt on on_off button */
@@ -137,16 +140,18 @@ int32_t main(void)
             /* clear flag */
             run = 0;
             phase_index = 0;
-					  phase_cnt =0;
+					  phase_cnt = 0;
+            phase_cnt_target = (wave)? l_duration[0]:s_duration[0];
+            /* set logic0 & logic 1 initial values */
+            logic0 = dacCal[4];
+            logic1 = dacCal[3];
+            /* get the period value of timer1 for first phase */
             uint16_t u16Period = 4000 / (freq[0] * 2);
             /* Run timer1 for generate wave values on DAC */
             Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
             /* must be set in every phase */
             Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
             Bt_M0_Run(TIM1);
-            /* set logic0 & logic 1 initial values */
-            logic0 = dacCal[4];
-            logic1 = dacCal[3];
             /* make the wave led flash this change acording to state in timer0 callback */
             /* change device state */
             state = RUNNING;
