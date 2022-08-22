@@ -36,23 +36,14 @@ extern volatile int buzz_en;
 extern volatile uint16_t logic0;
 extern volatile uint16_t logic1;
 
-static int get_dacVal_index(void)
-{
-    switch (dacCur[phase_index])
-    {
-    case 100:
-        return 0;
-    case 80:
-        return 1;
-    case 50:
-        return 2;
-    case 20:
-        return 3;
-    default:
-        return -1;
-    }
-    
-}
+/* timer0 fire flag each 10mss */
+extern volatile int timer0_callback;
+
+/* for signaling writing logic0,1 to DAC */
+extern volatile int w_logic0;
+extern volatile int w_logic1;
+
+
 
 
 /* take long press action according to device state */
@@ -120,55 +111,7 @@ void Tim0_IRQHandler(void)
     static int bz;
     if(TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
-        if(state == RUNNING)
-        {
-            /* this counts number of times wave could run */
-            phase_cnt++;
-            uint32_t target = (wave)? l_duration[phase_index]:s_duration[phase_index];
-            /* check if it is passed half of phase duration */
-            if(phase_cnt >= phase_cnt_target * 50)
-            {
-                /* dac value should be changed to positive current */
-                if(freq[phase_index] != 0)
-                {
-                    logic1 = dacCal[8 - get_dacVal_index()];
-                }
-            }
-            if(phase_cnt == phase_cnt_target * 100)
-            {
-                /* Here should be where the values must be changed for running next phase */
-                /* change dac values here */
-                phase_index++;
-                /* if any phase remains */
-                if(phase_index < 18)
-                {
-                    phase_cnt = 0;
-                    phase_cnt_target = phase_cnt_target = (wave)? l_duration[phase_index]:s_duration[phase_index];
-                    /* if phase frequency is 0 (Idle phase) */
-                    if(freq[phase_index] == 0)
-                    {    
-                        logic1 = logic0;
-                    }
-                    else
-                    {
-                        logic1 = dacCal[get_dacVal_index()];
-                        /* change timer frequency */
-                        Bt_M0_Stop(TIM1);
-                        uint16_t u16Period = 4000 / (freq[phase_index] * 2);
-                        /* Run timer1 for generate wave values on DAC */
-                        Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
-                        /* must be set in every phase */
-                        Bt_M0_Cnt16Set(TIM1,  0x10000 - u16Period);
-                        Bt_M0_Run(TIM1);
-                    }
-                }
-                /* it is over device must go back to sleep */
-                else
-                {
-                    sleep = 1;
-                }
-            }
-        }
+				timer0_callback = 1;
         /* for on_off button */
         if(onOff_interrupt)
         {
@@ -199,7 +142,7 @@ void App_Timer0Cfg(void)
     uint16_t                  u16CntValue;
     stc_bt_mode0_cfg_t     stcBtBaseCfg;
     //uint16_t u16Period = 31250;
-    uint16_t u16Period = 62; // this is 10ms period clock 4Mhz/256
+    uint16_t u16Period = 157; // this is 10ms period clock 4Mhz/256
     DDL_ZERO_STRUCT(stcBtBaseCfg);
     
     Sysctrl_SetPeripheralGate(SysctrlPeripheralBaseTim, TRUE);
@@ -233,16 +176,13 @@ void Tim1_IRQHandler(void)
     {
         if(i == 0)
         {
-            Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
-            Dac_SoftwareTriggerCmd();
             i = 1;
+						w_logic0 = 1;
         }
         else
         {
-            /* this value will be negative*/
-            Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
-            Dac_SoftwareTriggerCmd();
             i = 0;
+						w_logic1 = 1;
         }
         Bt_ClearIntFlag(TIM1,BtUevIrq);
     }
@@ -268,9 +208,9 @@ void App_Timer1Cfg()
     stcBtBaseCfg.bEnGate    = FALSE;
     stcBtBaseCfg.enGateP    = BtGatePositive;
     Bt_Mode0_Init(TIM1, &stcBtBaseCfg);
-    /* Lines below should be set in each every phase */
     
     Bt_ClearIntFlag(TIM1,BtUevIrq);
     Bt_Mode0_EnableIrq(TIM1);
-    EnableNvic(TIM1_IRQn, IrqLevel3, TRUE);
+    EnableNvic(TIM1_IRQn, IrqLevel2, TRUE);
+		
 }
