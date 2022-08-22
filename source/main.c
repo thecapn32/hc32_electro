@@ -195,7 +195,7 @@ int32_t main(void)
   // lowPowerGpios();
   // Lpm_GotoDeepSleep(FALSE);
   /* */
-  run = 1;
+  run = 0;
 
   // App_AdcInit();
   while (1)
