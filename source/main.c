@@ -51,7 +51,7 @@ volatile uint32_t phase_cnt = 0;
 volatile uint32_t phase_cnt_target = 0;
 
 volatile uint16_t logic0 = 0;
-volatile uint16_t logic1 = 0;
+volatile uint16_t logic1 = 4000;
 
 /* */
 
@@ -272,7 +272,7 @@ static void check_state_signal(void)
 int32_t main(void)
 {
   /* init gpios that are active in deep sleep mode */
-  // setLpGpio();
+  setLpGpio();
   /* DAC unit init */
   // App_DACInit();
   /* ADC unit init */
@@ -283,7 +283,7 @@ int32_t main(void)
   App_DACInit();
   App_Timer0Cfg();
   App_Timer1Cfg();
-
+	state = RUNNING;
   /* enable interrupt on on_off button */
   /* enable interrupt on chrg */
   /* enable interrupt on usb_detect */

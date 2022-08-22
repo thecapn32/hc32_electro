@@ -138,5 +138,5 @@ void App_Timer1Cfg()
     Bt_ClearIntFlag(TIM1,BtUevIrq);
     Bt_Mode0_EnableIrq(TIM1);
     EnableNvic(TIM1_IRQn, IrqLevel2, TRUE);
-	Bt_M0_Run(TIM1);
+		Bt_M0_Run(TIM1);
 }
