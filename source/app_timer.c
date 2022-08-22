@@ -131,6 +131,10 @@ void App_Timer1Cfg()
     stcBtBaseCfg.enGateP    = BtGatePositive;
     Bt_Mode0_Init(TIM1, &stcBtBaseCfg);
     
+    Bt_M0_ARRSet(TIM1, 0x10000 - 0xff00);
+    
+    Bt_M0_Cnt16Set(TIM1, 0x10000 - 0xff00);
+
     Bt_ClearIntFlag(TIM1,BtUevIrq);
     Bt_Mode0_EnableIrq(TIM1);
     EnableNvic(TIM1_IRQn, IrqLevel2, TRUE);
