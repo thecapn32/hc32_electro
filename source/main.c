@@ -89,15 +89,15 @@ static void beep(int t)
 int32_t main(void)
 {
     /* init gpios that are active in deep sleep mode */
-    setLpGpio();
+    //setLpGpio();
     /* DAC unit init */
-   // App_DACInit();
+    //App_DACInit();
     /* ADC unit init */
-   // App_AdcInit();
+    // App_AdcInit();
     /* Timer0 init */
-    App_Timer0Cfg();
+    //App_Timer0Cfg();
 
-    App_Timer1Cfg();
+    //App_Timer1Cfg();
 	
 	
     /* enable interrupt on on_off button */
@@ -116,13 +116,15 @@ int32_t main(void)
             /* set gpio pin modes enable necessary pins */
             setActvGpio();
 					  App_DACInit();
+						App_AdcInit();
+						App_AdcSglCfg();
             /* 1 long beep */
             /* change state */
             state = WAKEUP;
             /* enable ADC to measure battery voltage and temp -todo */
 						
             /* here also do DAC calibration */
-					  App_AdcInit();
+						
             App_DacCali();
 						buzz_en = 1;
 						delay1ms(1000);

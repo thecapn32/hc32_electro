@@ -19,7 +19,7 @@ void lowPowerGpios(void)
 {
     Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
 
-    Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
+    //Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
 
     ///< make all pins digital output
     M0P_GPIO->PAADS = 0;
@@ -46,7 +46,7 @@ void lowPowerGpios(void)
     M0P_GPIO->PEPD = 0xFFFF;
     M0P_GPIO->PFPD = 0xFFFF;
     //enable pullup for vbat & t_sen pin
-	M0P_GPIO->PAPU = 0x0060;
+	  M0P_GPIO->PAPU = 0x0060;
 }
 
 /* setup GPIOs that stay active during DeepSleep */
@@ -151,7 +151,6 @@ void setActvGpio(void)
     /* DAC pin */
     Gpio_SetAnalogMode(dacPort, dacPin);
 }
-
 
 /* PortB interrupt handler */
 void PortB_IRQHandler(void)

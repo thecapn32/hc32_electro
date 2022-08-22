@@ -12,6 +12,10 @@ extern volatile uint32_t V_SEN;
 extern volatile uint32_t T_SEN;
 extern volatile uint32_t I_SEN;
 
+uint16_t test_val = 0;
+
+uint16_t get_val = 0;
+
 /* calculating current from ADC value */
 volatile float current;
 
@@ -27,9 +31,9 @@ void App_AdcInit(void)
     Sysctrl_SetPeripheralGate(SysctrlPeripheralAdcBgr, TRUE); 
     Bgr_BgrEnable();
     ///< ADC ?????
-    stcAdcCfg.enAdcMode         = AdcScanMode;
+    stcAdcCfg.enAdcMode         = AdcSglMode;
     stcAdcCfg.enAdcClkDiv       = AdcMskClkDiv1;
-    stcAdcCfg.enAdcSampCycleSel = AdcMskSampCycle12Clk;
+    stcAdcCfg.enAdcSampCycleSel = AdcMskSampCycle8Clk;
     stcAdcCfg.enAdcRefVolSel    = AdcMskRefVolSelExtern1;
     stcAdcCfg.enAdcOpBuf        = AdcMskBufDisable;
     stcAdcCfg.enInRef           = AdcMskInRefDisable;
@@ -63,31 +67,33 @@ void App_DACInit(void)
 /* DAC calibrate */
 void App_DacCali(void)
 {
-    uint16_t test_val = 0;
+    
     int i = 0;
     /* enable cali pin */
     while(1)
     {
         Dac_SetChannelData(DacRightAlign, DacBit12, test_val);
-        test_val++;
+				delay1ms(100);
+        //test_val++;
         Dac_SoftwareTriggerCmd();
-        delay1ms(10);
+        delay1ms(100);
         Adc_SGL_Start();
-        delay1ms(10);
-        if((int)current >= dacCur[i])
+        delay1ms(100);
+				get_val = Dac_GetDataOutputValue();
+        /* if((int)current >= dacCur[i])
         {
             delay1ms(100);
             Adc_SGL_Start();
             delay1ms(10);
             if((int)current >= dacCur[i])
             {
-                /* save the calculated value somewhere */
+                // save the calculated value somewhere 
                 dacCal[i] = test_val;
                 i++;
                 if(i > 8)
                     break;
             }
-        }
+        }*/
     }
 }
 
@@ -144,7 +150,7 @@ void App_AdcThrCfg(void)
 /* single ADC measure for */
 void App_AdcSglCfg(void)
 {
-    /* Configuring PA06 for I_SEN */
+    /* Configuring PA07 for I_SEN */
     Adc_CfgSglChannel(AdcExInputCH7);
     Adc_EnableIrq();
     EnableNvic(ADC_DAC_IRQn, IrqLevel3, TRUE);
