@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "dac.h"
 #include "bgr.h"
+
 #include "app_pindef.h"
 #include "common.h"
 
@@ -36,6 +37,8 @@ extern volatile int buzz_en;
 extern volatile uint16_t logic0;
 extern volatile uint16_t logic1;
 
+
+
 /* timer0 fire flag each 10mss */
 extern volatile int timer0_callback;
 
@@ -50,11 +53,24 @@ extern volatile int w_logic1;
 void Tim0_IRQHandler(void)
 {
     /* for toggling buzzer */
-    
+    static int bz;
     if(TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
 	    timer0_callback = 1;
-        Bt_ClearIntFlag(TIM0,BtUevIrq);
+			if (buzz_en)
+      {
+        if (bz == 0)
+        {
+          bz++;
+          Gpio_SetIO(buzzPort, buzzPin);
+        }
+        else
+        {
+          bz = 0;
+          Gpio_ClrIO(buzzPort, buzzPin);
+        }
+      }
+      Bt_ClearIntFlag(TIM0,BtUevIrq);
     }
 }
 
@@ -101,7 +117,7 @@ void Tim1_IRQHandler(void)
         if(i == 0)
         {
             i = 1;
-			w_logic0 = 1;
+						w_logic0 = 1;
         }
         else
         {

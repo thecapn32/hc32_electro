@@ -14,6 +14,8 @@ extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
 
+
+
 /* make all pins ready to enter low power mode */
 void lowPowerGpios(void)
 {
@@ -86,7 +88,7 @@ void setActvGpio(void)
 {
     stc_gpio_cfg_t stcGpioCfg;
     Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
-
+		Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
     /* common attributes */
     stcGpioCfg.enOD = GpioOdDisable;
     stcGpioCfg.enDrv = GpioDrvL;
@@ -115,11 +117,11 @@ void setActvGpio(void)
     if(wave)
     {
         Gpio_ClrIO(wav0LedPort, wav0LedPin);
-        Gpio_ClrIO(wav1LedPort, wav1LedPin);
+        Gpio_SetIO(wav1LedPort, wav1LedPin);
     }
     else
     {
-        Gpio_ClrIO(wav0LedPort, wav0LedPin);
+        Gpio_SetIO(wav0LedPort, wav0LedPin);
         Gpio_ClrIO(wav1LedPort, wav1LedPin);
     }
     /* PWR_EN pin  */

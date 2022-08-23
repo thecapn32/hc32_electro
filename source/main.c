@@ -20,6 +20,7 @@
 #include "gpio.h"
 #include "lpm.h"
 #include "dac.h"
+#include "adc.h"
 
 #include "app_pindef.h"
 #include "app_gpio.h"
@@ -31,7 +32,8 @@ enum device_state_t
   SLEEP,
   WAKEUP,
   RUNNING,
-  PAUSE
+  PAUSE,
+	TEST
 };
 /* This variable holds the corresponding state of device */
 volatile int state = SLEEP;
@@ -42,6 +44,7 @@ volatile int run = 0;
 volatile int pause = 0;
 volatile int sleep = 0;
 volatile int change_wave = 0;
+volatile int test_mode = 0;
 
 /* hold number of current phase in running state */
 volatile uint32_t phase_index = 0;
@@ -79,7 +82,7 @@ volatile uint32_t T_SEN;
 volatile uint32_t I_SEN;
 /*t*/
 /* for buzzer */
-static int bz;
+
 volatile int press_count = 0;
 /* sw1 pressed flag for timer0 */
 volatile int onOff_interrupt = 0;
@@ -87,12 +90,16 @@ volatile int onOff_interrupt = 0;
 /* in pause state count */
 volatile uint32_t pause_cnt = 0;
 
-/* timer0 fire flag each 10mss */
+volatile uint32_t test_cnt = 0;
+
+/* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
 /* for signaling writing logic0,1 to DAC */
 volatile int w_logic0 = 0;
 volatile int w_logic1 = 0;
+
+volatile int adc_logic;
 
 /* take long press action according to device state */
 static void long_press_action()
@@ -116,6 +123,7 @@ static void long_press_action()
   }
 }
 
+
 /* this function if for ON_OFF button */
 static void check_onoff(void)
 {
@@ -137,7 +145,7 @@ static void check_onoff(void)
     if (state == SLEEP)
     {
       sleep = 1;
-    }
+		}
     else if (state == WAKEUP || state == PAUSE)
     {
       run = 1;
@@ -157,6 +165,7 @@ static void beep(int t)
   buzz_en = 0;
   Gpio_ClrIO(buzzPort, buzzPin);
 }
+
 
 static int get_dacVal_index(void)
 {
@@ -210,14 +219,15 @@ static void check_state_signal(void)
     phase_cnt = 0;
     phase_cnt_target = (wave) ? l_duration[0] : s_duration[0];
     /* set logic0 & logic 1 initial values */
-    logic0 = 0;
-    logic1 = 4000;
+    logic0 = dacCal[4];
+    logic1 = dacCal[3];
     /* get the period value of timer1 for first phase */
     uint16_t u16Period = freq[0];
     /* Run timer1 for generate wave values on DAC */
     Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
     /* must be set in every phase */
     Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
+		App_AdcSglCfg();
     Bt_M0_Run(TIM0);
     Bt_M0_Run(TIM1);
     /* make the wave led flash this change acording to state in timer0 callback */
@@ -259,68 +269,29 @@ static void check_state_signal(void)
     if (wave)
     {
       wave = 0;
-      Gpio_ClrIO(wav0LedPort, wav0LedPin);
-      Gpio_SetIO(wav1LedPort, wav1LedPin);
+      
+			Gpio_SetIO(wav0LedPort, wav0LedPin);
+      Gpio_ClrIO(wav1LedPort, wav1LedPin);
     }
     else
     {
+			Gpio_ClrIO(wav0LedPort, wav0LedPin);
+      Gpio_SetIO(wav1LedPort, wav1LedPin);
       wave = 1;
-      Gpio_SetIO(wav0LedPort, wav0LedPin);
-      Gpio_ClrIO(wav1LedPort, wav1LedPin);
+      
     }
   }
+	if (test_mode)
+	{
+		//enable uart and start listening
+	}
 }
 
-int32_t main(void)
-{
-  /* init gpios that are active in deep sleep mode */
-  setLpGpio();
-  /* DAC unit init */
-  // App_DACInit();
-  /* ADC unit init */
-  // App_AdcInit();
-  /* Timer0 init */
-  delay1ms(1000);
-  setActvGpio();
-  App_DACInit();
-  App_Timer0Cfg();
-  App_Timer1Cfg();
-	
-  /* enable interrupt on on_off button */
-  /* enable interrupt on chrg */
-  /* enable interrupt on usb_detect */
-  // lowPowerGpios();
-  // Lpm_GotoDeepSleep(FALSE);
-  /* */
-  run = 1;
 
-  // App_AdcInit();
-  while (1)
-  {
-    check_state_signal();
-    if (timer0_callback)
-    {
-      timer0_callback = 0;
-      /* for on_off button */
-      if (onOff_interrupt)
-      {
-        check_onoff();
-      }
-      if (buzz_en)
-      {
-        if (bz == 0)
-        {
-          bz++;
-          Gpio_SetIO(buzzPort, buzzPin);
-        }
-        else
-        {
-          bz = 0;
-          Gpio_ClrIO(buzzPort, buzzPin);
-        }
-      }
-      if (state == RUNNING)
-      {
+
+static void check_phase()
+{
+
         /* this counts number of times wave could run */
         phase_cnt++;
         /* check if it is passed half of phase duration */
@@ -368,19 +339,108 @@ int32_t main(void)
             sleep = 1;
           }
         }
+ }
+ 
+
+
+ 
+ int32_t main(void)
+{
+  /* init gpios that are active in deep sleep mode */
+  setLpGpio();
+	int wave_flash = 0;
+	int wave_flash_cnt = 0;
+  /* DAC unit init */
+  // App_DACInit();
+  /* ADC unit init */
+  
+  /* Timer0 init */
+  delay1ms(1000);
+  setActvGpio();
+  App_DACInit();
+	App_AdcInit();
+  App_Timer0Cfg();
+  App_Timer1Cfg();
+	
+  /* enable interrupt on on_off button */
+  /* enable interrupt on chrg */
+  /* enable interrupt on usb_detect */
+  // lowPowerGpios();
+  // Lpm_GotoDeepSleep(FALSE);
+  /* */
+  run = 1;
+
+  // App_AdcInit();
+  while (1)
+  {
+    check_state_signal();
+    if (timer0_callback)
+    {
+      timer0_callback = 0;
+      /* for on_off button */
+      if (onOff_interrupt)
+      {
+        check_onoff();
       }
-    }
-    if (w_logic0)
+      
+      
+			if (state == RUNNING)
+      {
+				check_phase();
+				wave_flash_cnt++;
+				if(wave_flash_cnt >= 6)
+				{
+					wave_flash_cnt = 0;
+					if(wave)
+					{
+						Gpio_WriteOutputIO(wav1LedPort, wav1LedPin, wave_flash);
+						wave_flash = !wave_flash;
+					}
+					else
+					{
+						Gpio_WriteOutputIO(wav0LedPort, wav0LedPin, wave_flash);
+						wave_flash = !wave_flash;
+					}
+				}
+			}
+			
+			if (state == PAUSE)
+			{
+				pause_cnt++;
+				/* if 15 min in pause */
+				if(pause_cnt >= 90000)
+				{
+					beep(300);
+					delay1ms(500);
+					beep(300);
+					sleep = 1;
+				}
+			}
+			if (state == TEST)
+			{
+				test_cnt++;
+				if(test_cnt >= 3000)
+				{
+					//set gpios to normal goto sleep
+				}
+			}
+		}
+    /* for writing to DAC */
+		if (w_logic0)
     {
       w_logic0 = 0;
       Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
       Dac_SoftwareTriggerCmd();
+			adc_logic = 1;
+			//Adc_SGL_Start();
     }
     if (w_logic1)
     {
       w_logic1 = 0;
       Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
       Dac_SoftwareTriggerCmd();
+			//Adc_SGL_Start();
     }
-  }
+  
+	}
 }

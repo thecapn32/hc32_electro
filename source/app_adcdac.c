@@ -22,6 +22,13 @@ volatile float current;
 /* for putting system to sleep when abnormal behavior seen */
 extern volatile int sleep;
 
+/* hold number of current phase in running state */
+extern volatile int phase_index;
+
+extern const uint32_t dacCur_r[18];
+
+extern volatile int adc_logic;
+
 /* init ADC module */
 void App_AdcInit(void)
 {
@@ -187,6 +194,19 @@ void Adc_IRQHandler(void)
         I_SEN = Adc_GetSglResult();
         float v0 = I_SEN * (2.471 / 4095.0);
         current = (v0 - 1.24) / 24.0 * 10000.0;
+				if(current < 0)
+					current = -current;
+				if(adc_logic)
+				{
+					adc_logic = 0;
+					if(current > 15)
+						sleep = 2;
+				}
+				else
+				{
+					if(dacCur_r[phase_index] - current > 15)
+						sleep = 2;
+				}
         Adc_SGL_Stop();
     }
 }
