@@ -52,6 +52,7 @@ void lowPowerGpios(void)
 	M0P_GPIO->PAPU = 0x0060;
 }
 
+
 /* setup GPIOs that stay active during DeepSleep */
 void setLpGpio(void)
 {
@@ -70,10 +71,10 @@ void setLpGpio(void)
 
     /* Configuring USB_DETECT pin */
     stcGpioCfg.enPu = GpioPuDisable;
-    stcGpioCfg.enPd = GpioPdEnable;
+    //stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(usbPort, usbPin, &stcGpioCfg);
     Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
-
+		stcGpioCfg.enPd = GpioPdEnable;
     /* Configuring CHRG pin */
     Gpio_Init(chrgPort, chrgPin, &stcGpioCfg);
 
@@ -85,6 +86,7 @@ void setLpGpio(void)
     Gpio_Init(lowChrgLedPort, lowChrgLedPin, &stcGpioCfg);
 
 }
+
 
 /* setup GPIOs that function in active mode */
 void setActvGpio(void)
@@ -157,6 +159,7 @@ void setActvGpio(void)
     Gpio_SetAnalogMode(dacPort, dacPin);
 }
 
+
 /* PortB interrupt handler */
 void PortB_IRQHandler(void)
 {
@@ -206,6 +209,7 @@ void PortB_IRQHandler(void)
     }
 
 }
+
 
 void PortC_IRQHandler(void)
 {
