@@ -32,7 +32,8 @@ void lowPowerGpios(void)
     M0P_GPIO->PFADS = 0;
     
     ///< make all pins as input
-    M0P_GPIO->PADIR = 0XFFFF;
+    //except GREEN_LED(PA08), RED_LED(PA09)
+    M0P_GPIO->PADIR = 0XFE7F;
     M0P_GPIO->PBDIR = 0XFFFF;
     M0P_GPIO->PCDIR = 0XFFFF;
     M0P_GPIO->PDDIR = 0XFFFF;
@@ -41,14 +42,14 @@ void lowPowerGpios(void)
     
     ///< enable pulldown for all pins except on_off pin and vbat
     // and also leds for charging and also full charge
-    M0P_GPIO->PAPD = 0xFF9F;
-    M0P_GPIO->PBPD = 0xFFDF;
+    M0P_GPIO->PAPD = 0xFF9F;  //vbat t_sen is pullup
+    M0P_GPIO->PBPD = 0xFFDF;  //on_off input is pullup it is configured 
     M0P_GPIO->PCPD = 0xFFFF;
     M0P_GPIO->PDPD = 0xFFFF;
     M0P_GPIO->PEPD = 0xFFFF;
     M0P_GPIO->PFPD = 0xFFFF;
     //enable pullup for vbat & t_sen pin
-	  M0P_GPIO->PAPU = 0x0060;
+	M0P_GPIO->PAPU = 0x0060;
 }
 
 /* setup GPIOs that stay active during DeepSleep */
@@ -65,11 +66,13 @@ void setLpGpio(void)
     stcGpioCfg.enPu = GpioPuEnable;
     stcGpioCfg.enPd = GpioPdDisable;
     Gpio_Init(onOffPort, onOffPin, &stcGpioCfg);
+    Gpio_EnableIrq(onOffPort, onOffPin, GpioIrqFalling);
 
     /* Configuring USB_DETECT pin */
     stcGpioCfg.enPu = GpioPuDisable;
     stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(usbPort, usbPin, &stcGpioCfg);
+    Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
 
     /* Configuring CHRG pin */
     Gpio_Init(chrgPort, chrgPin, &stcGpioCfg);
@@ -157,7 +160,7 @@ void setActvGpio(void)
 /* PortB interrupt handler */
 void PortB_IRQHandler(void)
 {
-    /* if ON_OFF pin pressed */
+    /* if sw1(ON_OFF) pin pressed */
     if(TRUE == Gpio_GetIrqStatus(onOffPort, onOffPin))
     {
         /* this is timer0 callback function to recognise long press */
@@ -172,9 +175,11 @@ void PortB_IRQHandler(void)
         Gpio_ClearIrq(onOffPort, onOffPin);
     }
     
+    /* if sw2 pin pressed */
     if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
     {
-        if(state == WAKEUP) {        
+        if(state == WAKEUP) 
+        {
             if(wave) {
                 wave = 0;
                 Gpio_SetIO(wav0LedPort, wav0LedPin);
@@ -186,13 +191,52 @@ void PortB_IRQHandler(void)
                 Gpio_SetIO(wav1LedPort, wav1LedPin);
             }
         }
-        //make this happen in the hardware
-        //Bt_M0_Run(TIM0); the timer0 will be always running
-        buzz_en = 1;
-        delay1ms(300);
-        buzz_en = 0;
-        Gpio_ClrIO(buzzPort, buzzPin);
-        //Bt_M0_Stop(TIM0);
         Gpio_ClearIrq(wavSelPort, wavSelPin);
     }
-} 
+    
+    /* chrg pin HIGH -> LOW */
+    if(TRUE == Gpio_GetIrqStatus(chrgPort, chrgPin))
+    {
+        Gpio_ClearIrq(chrgPort, chrgPin);
+        if(TRUE == Gpio_GetInputIO(chrgPort, chrgPin))
+        {
+            Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
+            Gpio_DisableIrq(usbPort, usbPin, GpioIrqFalling);
+        }
+    }
+
+}
+
+void PortC_IRQHandler(void)
+{
+    if(TRUE == Gpio_GetIrqStatus(usbPort, usbPin))
+    {
+        /* USB is plugged in */
+        if(TRUE == Gpio_GetInputIO(usbPort, usbPin))
+        {
+            Gpio_DisableIrq(usbPort, usbPin, GpioIrqRising);
+            Gpio_EnableIrq(usbPort, usbPin, GpioIrqFalling);
+            /* if battery is charging */
+            if(TRUE == Gpio_GetInputIO(chrgPort, chrgPin))
+            {
+                Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
+                Gpio_EnableIrq(chrgPort, chrgPin, GpioIrqFalling);
+            }
+            else
+            {
+                Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
+            }
+        }
+        /* USB is plugged out */
+        else
+        {
+            /* turn off leds and make it so it can detect if plugged again */
+            Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
+            Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+            Gpio_DisableIrq(chrgPort, chrgPin, GpioIrqFalling);
+            Gpio_DisableIrq(usbPort, usbPin, GpioIrqFalling);
+            Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
+        }
+        Gpio_ClearIrq(usbPort, usbPin);
+    }
+}

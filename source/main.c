@@ -33,7 +33,7 @@ enum device_state_t
   WAKEUP,
   RUNNING,
   PAUSE,
-	TEST
+  TEST
 };
 /* This variable holds the corresponding state of device */
 volatile int state = SLEEP;
@@ -61,7 +61,9 @@ volatile uint16_t logic1 = 4000;
 /* selected wave to run */
 volatile int wave = 0;
 
-/* for making buzzer buzz */
+/* for making buzzer beep */
+volatile int beep = 0;
+/* for enabling and disabling beep sound */
 volatile int buzz_en = 0;
 
 const uint32_t l_duration[18] = {10, 5, 10, 5, 10, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
@@ -123,7 +125,6 @@ static void long_press_action()
   }
 }
 
-
 /* this function if for ON_OFF button */
 static void check_onoff(void)
 {
@@ -145,7 +146,7 @@ static void check_onoff(void)
     if (state == SLEEP)
     {
       sleep = 1;
-		}
+    }
     else if (state == WAKEUP || state == PAUSE)
     {
       run = 1;
@@ -157,15 +158,17 @@ static void check_onoff(void)
   }
 }
 
-
-static void beep(int t)
+static void buzz_beep(int t)
 {
-  buzz_en = 1;
-  delay1ms(t);
-  buzz_en = 0;
-  Gpio_ClrIO(buzzPort, buzzPin);
+  if(buzz_en)
+  {
+    beep = 1;
+    delay1ms(t);
+    beep = 0;
+    delay1ms(1);
+    Gpio_ClrIO(buzzPort, buzzPin);
+  }
 }
-
 
 static int get_dacVal_index(void)
 {
@@ -183,7 +186,6 @@ static int get_dacVal_index(void)
     return -1;
   }
 }
-
 
 static void check_state_signal(void)
 {
@@ -204,10 +206,7 @@ static void check_state_signal(void)
     /* here also do DAC calibration */
 
     // App_DacCali();
-    buzz_en = 1;
-    delay1ms(1000);
-    buzz_en = 0;
-    delay1ms(5);
+    buzz_beep(1000);
     Gpio_ClrIO(buzzPort, buzzPin);
     Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
   }
@@ -227,7 +226,7 @@ static void check_state_signal(void)
     Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
     /* must be set in every phase */
     Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-		App_AdcSglCfg();
+    App_AdcSglCfg();
     Bt_M0_Run(TIM0);
     Bt_M0_Run(TIM1);
     /* make the wave led flash this change acording to state in timer0 callback */
@@ -244,9 +243,9 @@ static void check_state_signal(void)
     state = PAUSE;
     /* reset pause counter */
     pause_cnt = 0;
-    beep(300);
+    buzz_beep(300);
     delay1ms(500);
-    beep(300);
+    buzz_beep(300);
   }
   if (sleep)
   {
@@ -269,106 +268,100 @@ static void check_state_signal(void)
     if (wave)
     {
       wave = 0;
-      
-			Gpio_SetIO(wav0LedPort, wav0LedPin);
+
+      Gpio_SetIO(wav0LedPort, wav0LedPin);
       Gpio_ClrIO(wav1LedPort, wav1LedPin);
     }
     else
     {
-			Gpio_ClrIO(wav0LedPort, wav0LedPin);
+      Gpio_ClrIO(wav0LedPort, wav0LedPin);
       Gpio_SetIO(wav1LedPort, wav1LedPin);
       wave = 1;
-      
     }
   }
-	if (test_mode)
-	{
-		//enable uart and start listening
-	}
+  if (test_mode)
+  {
+    // enable uart and start listening
+  }
 }
-
-
 
 static void check_phase()
 {
 
-        /* this counts number of times wave could run */
-        phase_cnt++;
-        /* check if it is passed half of phase duration */
-        if (phase_cnt >= phase_cnt_target * 50)
-        {
-          /* dac value should be changed to positive current */
-          if(freq[phase_index] != 0)
-          {
-               logic1 = dacCal[8 - get_dacVal_index()];
-          }
-        }
-        if (phase_cnt == phase_cnt_target * 100)
-        {
-          /* Here should be where the values must be changed for running next phase */
-          /* change dac values here */
-          phase_index++;
-          /* if any phase remains */
-          if (phase_index < 18)
-          {
-            phase_cnt = 0;
-            phase_cnt_target = (wave) ? l_duration[phase_index] : s_duration[phase_index];
-            /* if phase frequency is 0 (Idle phase) */
-            if (freq[phase_index] == 0)
-            {
-              logic1 = logic0;
-            }
-            else
-            {
-              logic1 = dacCal[get_dacVal_index()];
-              
-              /* change timer frequency */
-              Bt_M0_Stop(TIM1);
-							
-              uint16_t u16Period = freq[phase_index] ;
-              /* Run timer1 for generate wave values on DAC */
-              Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
-              /* must be set in every phase */
-              Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-              Bt_M0_Run(TIM1);
-            }
-          }
-          /* it is over device must go back to sleep */
-          else
-          {
-            sleep = 1;
-          }
-        }
- }
- 
+  /* this counts number of times wave could run */
+  phase_cnt++;
+  /* check if it is passed half of phase duration */
+  if (phase_cnt >= phase_cnt_target * 50)
+  {
+    /* dac value should be changed to positive current */
+    if (freq[phase_index] != 0)
+    {
+      logic1 = dacCal[8 - get_dacVal_index()];
+    }
+  }
+  if (phase_cnt == phase_cnt_target * 100)
+  {
+    /* Here should be where the values must be changed for running next phase */
+    /* change dac values here */
+    phase_index++;
+    /* if any phase remains */
+    if (phase_index < 18)
+    {
+      phase_cnt = 0;
+      phase_cnt_target = (wave) ? l_duration[phase_index] : s_duration[phase_index];
+      /* if phase frequency is 0 (Idle phase) */
+      if (freq[phase_index] == 0)
+      {
+        logic1 = logic0;
+      }
+      else
+      {
+        logic1 = dacCal[get_dacVal_index()];
 
+        /* change timer frequency */
+        Bt_M0_Stop(TIM1);
 
- 
- int32_t main(void)
+        uint16_t u16Period = freq[phase_index];
+        /* Run timer1 for generate wave values on DAC */
+        Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
+        /* must be set in every phase */
+        Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
+        Bt_M0_Run(TIM1);
+      }
+    }
+    /* it is over device must go back to sleep */
+    else
+    {
+      sleep = 1;
+    }
+  }
+}
+
+int32_t main(void)
 {
   /* init gpios that are active in deep sleep mode */
   setLpGpio();
-	int wave_flash = 0;
-	int wave_flash_cnt = 0;
+  int wave_flash = 0;
+  int wave_flash_cnt = 0;
   /* DAC unit init */
   // App_DACInit();
   /* ADC unit init */
-  
+
   /* Timer0 init */
   delay1ms(1000);
   setActvGpio();
   App_DACInit();
-	App_AdcInit();
+  App_AdcInit();
   App_Timer0Cfg();
   App_Timer1Cfg();
-	
+
   /* enable interrupt on on_off button */
   /* enable interrupt on chrg */
   /* enable interrupt on usb_detect */
   // lowPowerGpios();
   // Lpm_GotoDeepSleep(FALSE);
   /* */
-  run = 1;
+  //run = 1;
 
   // App_AdcInit();
   while (1)
@@ -382,65 +375,63 @@ static void check_phase()
       {
         check_onoff();
       }
-      
-      
-			if (state == RUNNING)
+
+      if (state == RUNNING)
       {
-				check_phase();
-				wave_flash_cnt++;
-				if(wave_flash_cnt >= 6)
-				{
-					wave_flash_cnt = 0;
-					if(wave)
-					{
-						Gpio_WriteOutputIO(wav1LedPort, wav1LedPin, wave_flash);
-						wave_flash = !wave_flash;
-					}
-					else
-					{
-						Gpio_WriteOutputIO(wav0LedPort, wav0LedPin, wave_flash);
-						wave_flash = !wave_flash;
-					}
-				}
-			}
-			
-			if (state == PAUSE)
-			{
-				pause_cnt++;
-				/* if 15 min in pause */
-				if(pause_cnt >= 90000)
-				{
-					beep(300);
-					delay1ms(500);
-					beep(300);
-					sleep = 1;
-				}
-			}
-			if (state == TEST)
-			{
-				test_cnt++;
-				if(test_cnt >= 3000)
-				{
-					//set gpios to normal goto sleep
-				}
-			}
-		}
+        check_phase();
+        wave_flash_cnt++;
+        if (wave_flash_cnt >= 6)
+        {
+          wave_flash_cnt = 0;
+          if (wave)
+          {
+            Gpio_WriteOutputIO(wav1LedPort, wav1LedPin, wave_flash);
+            wave_flash = !wave_flash;
+          }
+          else
+          {
+            Gpio_WriteOutputIO(wav0LedPort, wav0LedPin, wave_flash);
+            wave_flash = !wave_flash;
+          }
+        }
+      }
+
+      if (state == PAUSE)
+      {
+        pause_cnt++;
+        /* if 15 min in pause */
+        if (pause_cnt >= 90000)
+        {
+          buzz_beep(300);
+          delay1ms(500);
+          buzz_beep(300);
+          sleep = 1;
+        }
+      }
+      if (state == TEST)
+      {
+        test_cnt++;
+        if (test_cnt >= 3000)
+        {
+          // set gpios to normal goto sleep
+        }
+      }
+    }
     /* for writing to DAC */
-		if (w_logic0)
+    if (w_logic0)
     {
       w_logic0 = 0;
       Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
       Dac_SoftwareTriggerCmd();
-			adc_logic = 1;
-			//Adc_SGL_Start();
+      adc_logic = 1;
+      // Adc_SGL_Start();
     }
     if (w_logic1)
     {
       w_logic1 = 0;
       Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
       Dac_SoftwareTriggerCmd();
-			//Adc_SGL_Start();
+      // Adc_SGL_Start();
     }
-  
-	}
+  }
 }

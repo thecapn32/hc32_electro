@@ -31,7 +31,7 @@ extern volatile int pause;
 extern volatile int sleep;
 
 /* this is for buzzer */
-extern volatile int buzz_en;
+extern volatile int beep;
 
 /* wave properties */
 extern volatile uint16_t logic0;
@@ -57,19 +57,19 @@ void Tim0_IRQHandler(void)
     if(TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
 	    timer0_callback = 1;
-			if (buzz_en)
-      {
-        if (bz == 0)
+	    if (beep)
         {
-          bz++;
-          Gpio_SetIO(buzzPort, buzzPin);
+            if (bz == 0)
+            {
+                bz++;
+                Gpio_SetIO(buzzPort, buzzPin);
+            }
+            else
+            {
+                bz = 0;
+                Gpio_ClrIO(buzzPort, buzzPin);
+            }
         }
-        else
-        {
-          bz = 0;
-          Gpio_ClrIO(buzzPort, buzzPin);
-        }
-      }
       Bt_ClearIntFlag(TIM0,BtUevIrq);
     }
 }
