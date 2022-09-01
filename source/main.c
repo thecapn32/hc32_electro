@@ -105,12 +105,12 @@ volatile int adc_logic;
 
 /* Configure system clock*/
 void App_ClkCfg(void)
-{    
-    Sysctrl_ClkSourceEnable(SysctrlClkRCL,TRUE);
-    Sysctrl_SysClkSwitch(SysctrlClkRCL);
-    Sysctrl_SetRCHTrim(SysctrlRchFreq4MHz);
-    Sysctrl_SysClkSwitch(SysctrlClkRCH);
-    Sysctrl_ClkSourceEnable(SysctrlClkRCL,FALSE);
+{
+  Sysctrl_ClkSourceEnable(SysctrlClkRCL, TRUE);
+  Sysctrl_SysClkSwitch(SysctrlClkRCL);
+  Sysctrl_SetRCHTrim(SysctrlRchFreq4MHz);
+  Sysctrl_SysClkSwitch(SysctrlClkRCH);
+  Sysctrl_ClkSourceEnable(SysctrlClkRCL, FALSE);
 }
 
 /* take long press action according to device state */
@@ -170,7 +170,7 @@ static void check_onoff(void)
 
 static void buzz_beep(int t)
 {
-  if(buzz_en)
+  if (buzz_en)
   {
     beep = 1;
     delay1ms(t);
@@ -204,17 +204,12 @@ static void check_state_signal(void)
     /* clear flag */
     wake = 0;
     /* set gpio pin modes enable necessary pins */
-
-    App_DACInit();
-    App_AdcInit();
-    App_AdcSglCfg();
+    setActvGpio();
     /* 1 long beep */
     /* change state */
     state = WAKEUP;
     /* enable ADC to measure battery voltage and temp -todo */
-
     /* here also do DAC calibration */
-
     // App_DacCali();
     buzz_beep(1000);
     Gpio_ClrIO(buzzPort, buzzPin);
@@ -350,8 +345,8 @@ static void check_phase()
 int32_t main(void)
 {
   /* init gpios that are active in deep sleep mode */
-	App_ClkCfg();
-  setLpGpio();
+  App_ClkCfg();
+  
   int wave_flash = 0;
   int wave_flash_cnt = 0;
   /* DAC unit init */
@@ -360,7 +355,8 @@ int32_t main(void)
 
   /* Timer0 init */
   delay1ms(1000);
-  setActvGpio();
+  setLpGpio();
+  
   App_DACInit();
   App_AdcInit();
   App_Timer0Cfg();
@@ -372,7 +368,7 @@ int32_t main(void)
   // lowPowerGpios();
   // Lpm_GotoDeepSleep(FALSE);
   /* */
-  //run = 1;
+  // run = 1;
 
   // App_AdcInit();
   while (1)
@@ -386,7 +382,6 @@ int32_t main(void)
       {
         check_onoff();
       }
-
       if (state == RUNNING)
       {
         check_phase();
@@ -406,7 +401,6 @@ int32_t main(void)
           }
         }
       }
-
       if (state == PAUSE)
       {
         pause_cnt++;
@@ -428,6 +422,5 @@ int32_t main(void)
         }
       }
     }
-    
   }
 }
