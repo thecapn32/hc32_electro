@@ -232,7 +232,6 @@ static void check_state_signal(void)
     /* must be set in every phase */
     Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
     App_AdcSglCfg();
-    Bt_M0_Run(TIM0);
     Bt_M0_Run(TIM1);
     /* make the wave led flash this change acording to state in timer0 callback */
     /* change device state */
