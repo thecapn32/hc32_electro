@@ -197,6 +197,17 @@ static void check_state_signal(void)
   {
     /* clear flag */
     wake = 0;
+    if(wave)
+    {
+      Gpio_ClrIO(wav0LedPort, wav0LedPin);
+      Gpio_SetIO(wav1LedPort, wav1LedPin);
+    }
+    else
+    {
+      Gpio_SetIO(wav0LedPort, wav0LedPin);
+      Gpio_ClrIO(wav1LedPort, wav1LedPin);
+    }
+    
     if(state == SLEEP)
     {
       /* set gpio pin modes enable necessary pins */
