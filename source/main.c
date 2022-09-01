@@ -365,8 +365,8 @@ int32_t main(void)
   /* enable interrupt on on_off button */
   /* enable interrupt on chrg */
   /* enable interrupt on usb_detect */
-  // lowPowerGpios();
-  // Lpm_GotoDeepSleep(FALSE);
+  lowPowerGpios();
+  Lpm_GotoDeepSleep(FALSE);
   /* */
   // run = 1;
 
