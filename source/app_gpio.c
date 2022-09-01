@@ -72,7 +72,8 @@ void setLpGpio(void)
     stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(usbPort, usbPin, &stcGpioCfg);
     Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
-	
+	EnableNvic(PORTC_IRQn, IrqLevel3, TRUE);
+
     /* Configuring CHRG pin */
     stcGpioCfg.enDir = GpioDirIn;
     stcGpioCfg.enOD = GpioOdDisable;
@@ -226,24 +227,25 @@ void PortC_IRQHandler(void)
         {
             Gpio_DisableIrq(usbPort, usbPin, GpioIrqRising);
             Gpio_EnableIrq(usbPort, usbPin, GpioIrqFalling);
+            Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
             /* if battery is charging */
-            if(TRUE == Gpio_GetInputIO(chrgPort, chrgPin))
-            {
-                Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
-                Gpio_EnableIrq(chrgPort, chrgPin, GpioIrqFalling);
-            }
-            else
-            {
-                Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
-            }
+            // if(TRUE == Gpio_GetInputIO(chrgPort, chrgPin))
+            // {
+            //     Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
+            //     //Gpio_EnableIrq(chrgPort, chrgPin, GpioIrqFalling);
+            // }
+            // else
+            // {
+            //     Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
+            // }
         }
         /* USB is plugged out */
         else
         {
             /* turn off leds and make it so it can detect if plugged again */
             Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
-            Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
-            Gpio_DisableIrq(chrgPort, chrgPin, GpioIrqFalling);
+            //Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+            //Gpio_DisableIrq(chrgPort, chrgPin, GpioIrqFalling);
             Gpio_DisableIrq(usbPort, usbPin, GpioIrqFalling);
             Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
         }
