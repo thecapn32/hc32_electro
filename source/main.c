@@ -103,6 +103,16 @@ volatile int w_logic1 = 0;
 
 volatile int adc_logic;
 
+/* Configure system clock*/
+void App_ClkCfg(void)
+{    
+    Sysctrl_ClkSourceEnable(SysctrlClkRCL,TRUE);
+    Sysctrl_SysClkSwitch(SysctrlClkRCL);
+    Sysctrl_SetRCHTrim(SysctrlRchFreq4MHz);
+    Sysctrl_SysClkSwitch(SysctrlClkRCH);
+    Sysctrl_ClkSourceEnable(SysctrlClkRCL,FALSE);
+}
+
 /* take long press action according to device state */
 static void long_press_action()
 {
@@ -340,6 +350,7 @@ static void check_phase()
 int32_t main(void)
 {
   /* init gpios that are active in deep sleep mode */
+	App_ClkCfg();
   setLpGpio();
   int wave_flash = 0;
   int wave_flash_cnt = 0;
@@ -417,21 +428,6 @@ int32_t main(void)
         }
       }
     }
-    /* for writing to DAC */
-    if (w_logic0)
-    {
-      w_logic0 = 0;
-      Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
-      Dac_SoftwareTriggerCmd();
-      adc_logic = 1;
-      // Adc_SGL_Start();
-    }
-    if (w_logic1)
-    {
-      w_logic1 = 0;
-      Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
-      Dac_SoftwareTriggerCmd();
-      // Adc_SGL_Start();
-    }
+    
   }
 }

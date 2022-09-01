@@ -14,8 +14,6 @@ extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
 
-
-
 /* make all pins ready to enter low power mode */
 void lowPowerGpios(void)
 {
@@ -71,9 +69,10 @@ void setLpGpio(void)
 
     /* Configuring USB_DETECT pin */
     stcGpioCfg.enPu = GpioPuDisable;
-    //stcGpioCfg.enPd = GpioPdEnable;
+    stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(usbPort, usbPin, &stcGpioCfg);
     Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
+		
 		stcGpioCfg.enPd = GpioPdEnable;
     /* Configuring CHRG pin */
     Gpio_Init(chrgPort, chrgPin, &stcGpioCfg);
@@ -84,7 +83,6 @@ void setLpGpio(void)
 
     /* configuring Low charge led */
     Gpio_Init(lowChrgLedPort, lowChrgLedPin, &stcGpioCfg);
-
 }
 
 

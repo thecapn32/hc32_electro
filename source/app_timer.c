@@ -47,8 +47,6 @@ extern volatile int w_logic0;
 extern volatile int w_logic1;
 
 
-
-
 /* Timer0 callback, called every 10ms */
 void Tim0_IRQHandler(void)
 {
@@ -117,12 +115,14 @@ void Tim1_IRQHandler(void)
         if(i == 0)
         {
             i = 1;
-						w_logic0 = 1;
+						Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
+						Dac_SoftwareTriggerCmd();
         }
         else
         {
             i = 0;
-						w_logic1 = 1;
+						Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
+						Dac_SoftwareTriggerCmd();
         }
         Bt_ClearIntFlag(TIM1,BtUevIrq);
     }
