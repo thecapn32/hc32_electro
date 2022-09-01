@@ -72,7 +72,7 @@ void setLpGpio(void)
     stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(usbPort, usbPin, &stcGpioCfg);
     Gpio_EnableIrq(usbPort, usbPin, GpioIrqRising);
-	EnableNvic(PORTC_IRQn, IrqLevel3, TRUE);
+	EnableNvic(PORTC_E_IRQn, IrqLevel3, TRUE);
 
     /* Configuring CHRG pin */
     stcGpioCfg.enDir = GpioDirIn;
