@@ -121,6 +121,9 @@ static void long_press_action()
   case WAKEUP:
     sleep = 1;
     break;
+  case RUNNING:
+    wake = 1;
+    break;
   case SLEEP:
     wake = 1;
     break;
