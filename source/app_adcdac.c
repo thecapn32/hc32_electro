@@ -193,7 +193,7 @@ void Adc_IRQHandler(void)
         Adc_ClrIrqStatus(AdcMskIrqSgl);
         I_SEN = Adc_GetSglResult();
         float v0 = I_SEN * (2.471 / 4095.0);
-        current = (v0 - 1.24) / 24.0 * 10000.0;
+        current = (v0 - 1.24) / 24.0 * 10000.0 * 0.91;  // define CAL_CONST as 1.0 as default, and after experiment, it will be 0.970 or 1.012 like
 				if(current < 0)
 					current = -current;
 				if(adc_logic)

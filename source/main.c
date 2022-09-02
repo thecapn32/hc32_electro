@@ -378,17 +378,19 @@ int32_t main(void)
   /* Timer0 init */
   delay1ms(1000);
   setLpGpio();
-  
+  setActvGpio();
   App_DACInit();
   App_AdcInit();
+	App_AdcSglCfg();
+	App_DacCali();
   App_Timer0Cfg();
   App_Timer1Cfg();
 
   /* enable interrupt on on_off button */
   /* enable interrupt on chrg */
   /* enable interrupt on usb_detect */
-  lowPowerGpios();
-  Lpm_GotoDeepSleep(FALSE);
+  //lowPowerGpios();
+  //Lpm_GotoDeepSleep(FALSE);
   /* */
   // run = 1;
 
