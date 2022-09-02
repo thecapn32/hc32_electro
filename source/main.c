@@ -381,8 +381,8 @@ int32_t main(void)
   setActvGpio();
   App_DACInit();
   App_AdcInit();
-	App_AdcSglCfg();
-	App_DacCali();
+	//App_AdcSglCfg();
+	//App_DacCali();
   App_Timer0Cfg();
   App_Timer1Cfg();
 
@@ -392,7 +392,7 @@ int32_t main(void)
   //lowPowerGpios();
   //Lpm_GotoDeepSleep(FALSE);
   /* */
-  // run = 1;
+   run = 1;
 
   // App_AdcInit();
   while (1)
