@@ -127,15 +127,15 @@ void setActvGpio(void)
     Gpio_Init(wav0LedPort, wav0LedPin, &stcGpioCfg);
     /* wave1 LED */
     Gpio_Init(wav1LedPort, wav1LedPin, &stcGpioCfg);
-    if(wave)
-    {
-        Gpio_ClrIO(wav0LedPort, wav0LedPin);
-        Gpio_SetIO(wav1LedPort, wav1LedPin);
-    }
-    else
+    if(wave == 0)
     {
         Gpio_SetIO(wav0LedPort, wav0LedPin);
         Gpio_ClrIO(wav1LedPort, wav1LedPin);
+    }
+    else
+    {
+        Gpio_ClrIO(wav0LedPort, wav0LedPin);
+        Gpio_SetIO(wav1LedPort, wav1LedPin);
     }
     /* PWR_EN pin  */
     Gpio_Init(pwrEnPort, pwrEnPin, &stcGpioCfg);
@@ -190,15 +190,16 @@ void PortB_IRQHandler(void)
     {
         if(state == WAKEUP) 
         {
-            if(wave) {
-                wave = 0;
-                Gpio_SetIO(wav0LedPort, wav0LedPin);
-                Gpio_ClrIO(wav1LedPort, wav1LedPin);
-            }
-            else {
+            if(wave == 0) {
                 wave = 1;
                 Gpio_ClrIO(wav0LedPort, wav0LedPin);
                 Gpio_SetIO(wav1LedPort, wav1LedPin);
+                
+            }
+            else {
+                wave = 0;
+                Gpio_SetIO(wav0LedPort, wav0LedPin);
+                Gpio_ClrIO(wav1LedPort, wav1LedPin);
             }
         }
         Gpio_ClearIrq(wavSelPort, wavSelPin);

@@ -59,6 +59,8 @@ volatile uint16_t logic1 = 4000;
 /* */
 
 /* selected wave to run */
+//wave 0 = long wave
+//wave 1 = short wave
 volatile int wave = 0;
 
 /* for making buzzer beep */
@@ -66,7 +68,7 @@ volatile int beep = 0;
 /* for enabling and disabling beep sound */
 volatile int buzz_en = 1;
 
-const uint32_t l_duration[18] = {10, 5, 10, 5, 10, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
+const uint32_t l_duration[18] = {30, 5, 30, 5, 240, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
 
 const uint32_t s_duration[18] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
 
@@ -77,6 +79,9 @@ const uint16_t freq[18] = {13, 0, 16, 0, 26, 0, 390, 0, 781, 0, 0xffff, 0, 781, 
 //                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
 const uint32_t dacCur_r[18] = {20, 0, 20, 0, 20, 0, 100, 0, 20, 0, 80, 0, 50, 80, 50, 0, 50, 100};
 
+const uint16_t dac_16Val_pos[18] = {2203, 1975, 2203, 1975, 2203, 1975, 3015, 1975, 2203, 
+                                    1975, 2796, 1975, 2532, 2796, 2532, 1975, 2532, 3015};
+//have an array for first time
 const int dacCur[9] = {-100, -80, -50, -20, 0, 20, 50, 80, 100};
 
 uint16_t dacCal[9] = {752, 958, 1288, 1597, 1816, 2081, 4090, 4090, 4090};
@@ -100,9 +105,6 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-/* for signaling writing logic0,1 to DAC */
-volatile int w_logic0 = 0;
-volatile int w_logic1 = 0;
 
 volatile int adc_logic;
 
@@ -203,15 +205,16 @@ static void check_state_signal(void)
   {
     /* clear flag */
     wake = 0;
-    if(wave)
-    {
-      Gpio_ClrIO(wav0LedPort, wav0LedPin);
-      Gpio_SetIO(wav1LedPort, wav1LedPin);
-    }
-    else
+    if(wave == 0)
     {
       Gpio_SetIO(wav0LedPort, wav0LedPin);
       Gpio_ClrIO(wav1LedPort, wav1LedPin);
+      
+    }
+    else
+    {
+      Gpio_ClrIO(wav0LedPort, wav0LedPin);
+      Gpio_SetIO(wav1LedPort, wav1LedPin);
     }
     
     if(state == SLEEP)
@@ -234,10 +237,10 @@ static void check_state_signal(void)
       //check VBAT and VSEN and if okay start waves
       phase_index = 0;
       phase_cnt = 0;
-      phase_cnt_target = (wave) ? l_duration[0] : s_duration[0];
+      phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
       /* set logic0 & logic 1 initial values */
-      logic0 = dacCal[4];
-      logic1 = dacCal[3];
+      logic0 = dac_16Val_pos[1];
+      logic1 = dac_16Val_pos[0];
       /* get the period value of timer1 for first phase */
       uint16_t u16Period = freq[0];
       /* Run timer1 for generate wave values on DAC */
@@ -295,17 +298,17 @@ static void check_state_signal(void)
   {
     change_wave = 0;
     buzz_beep(300);
-    if (wave)
+    if (wave == 0)
+    {
+      wave = 1;
+      Gpio_ClrIO(wav0LedPort, wav0LedPin);
+      Gpio_SetIO(wav1LedPort, wav1LedPin);
+    }
+    else
     {
       wave = 0;
       Gpio_SetIO(wav0LedPort, wav0LedPin);
       Gpio_ClrIO(wav1LedPort, wav1LedPin);
-    }
-    else
-    {
-      Gpio_ClrIO(wav0LedPort, wav0LedPin);
-      Gpio_SetIO(wav1LedPort, wav1LedPin);
-      wave = 1;
     }
   }
   if (test_mode)
@@ -319,15 +322,15 @@ static void check_phase()
 {
   /* this counts number of times wave could run */
   phase_cnt++;
-  /* check if it is passed half of phase duration */
-  if (phase_cnt >= phase_cnt_target * 50)
-  {
-    /* dac value should be changed to positive current */
-    if (freq[phase_index] != 0)
-    {
-      logic1 = dacCal[8 - get_dacVal_index()];
-    }
-  }
+  /* check if it is passed half of phase duration for now disable can't produce negative current*/
+  // if (phase_cnt >= phase_cnt_target * 50)
+  // {
+  //   /* dac value should be changed to positive current */
+  //   if (freq[phase_index] != 0)
+  //   {
+  //     logic1 = dac_16Val_pos[phase_index];
+  //   }
+  // }
   if (phase_cnt == phase_cnt_target * 100)
   {
     /* Here should be where the values must be changed for running next phase */
@@ -337,17 +340,17 @@ static void check_phase()
     if (phase_index < 18)
     {
       phase_cnt = 0;
-      phase_cnt_target = (wave) ? l_duration[phase_index] : s_duration[phase_index];
-      /* if phase frequency is 0 (Idle phase) */
+      phase_cnt_target = (wave == 0) ? l_duration[phase_index] : s_duration[phase_index];
+      /* if phase frequency is 0 (pause phase) */
       if (freq[phase_index] == 0)
       {
-        logic1 = logic0;
 				Bt_M0_Stop(TIM1);
-        //here also stop timer1 and only write to dac
+        Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
+        Dac_SoftwareTriggerCmd();
       }
       else
       {
-        logic1 = dacCal[get_dacVal_index()];
+        logic1 = dac_16Val_pos[phase_index];
         /* change timer frequency */
         Bt_M0_Stop(TIM1);
         uint16_t u16Period = freq[phase_index];
