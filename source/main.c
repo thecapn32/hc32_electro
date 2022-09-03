@@ -36,7 +36,7 @@ enum device_state_t
   TEST
 };
 /* This variable holds the corresponding state of device */
-volatile int state = SLEEP;
+volatile int state = WAKEUP;
 
 /* these variables are signals from interrupt tasks */
 volatile int wake = 0;
@@ -68,10 +68,13 @@ volatile int buzz_en = 1;
 
 const uint32_t l_duration[18] = {10, 5, 10, 5, 10, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
 
-const uint32_t s_duration[18] = {5, 5, 5, 5, 5, 2, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
+const uint32_t s_duration[18] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
 
-const uint16_t freq[18] = {13, 0, 14, 0, 25, 0, 390, 0, 781, 0, 0xffff, 0, 9765, 26039, 78, 0, 100, 1562};
-
+//testing	
+//const uint16_t freq[18] = {781, 9700, 9700, 9700, 9700, 9700, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
+//                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
+const uint16_t freq[18] = {13, 0, 16, 0, 26, 0, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
+//                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
 const uint32_t dacCur_r[18] = {20, 0, 20, 0, 20, 0, 100, 0, 20, 0, 80, 0, 50, 80, 50, 0, 50, 100};
 
 const int dacCur[9] = {-100, -80, -50, -20, 0, 20, 50, 80, 100};
@@ -242,6 +245,7 @@ static void check_state_signal(void)
       /* must be set in every phase */
       Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
       App_AdcSglCfg();
+			Bt_M0_Run(TIM0);
       Bt_M0_Run(TIM1);
     }
     else if(state == PAUSE) 
@@ -338,6 +342,7 @@ static void check_phase()
       if (freq[phase_index] == 0)
       {
         logic1 = logic0;
+				Bt_M0_Stop(TIM1);
         //here also stop timer1 and only write to dac
       }
       else
