@@ -20,7 +20,7 @@ void uart_sn_print(void)
     }
 }
 
-void uart_sn_value(uint8_t *val)
+void uart_sn_value(volatile uint8_t *val)
 {
     Uart_SendDataPoll(M0P_UART0,'S');
     Uart_SendDataPoll(M0P_UART0,'/');
