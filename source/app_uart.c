@@ -29,7 +29,7 @@ void uart_sn_value(uint8_t *val)
     Uart_SendDataPoll(M0P_UART0,' ');
     for (int i = 0; i < 8; i++)
     {
-        Uart_SendDataPoll(M0P_UART0,val[i]);
+        Uart_SendDataPoll(M0P_UART0, val[i]);
     }
     Uart_SendDataPoll(M0P_UART0,'\n');
     Uart_SendDataPoll(M0P_UART0,'\r');
