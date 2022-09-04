@@ -351,7 +351,7 @@ static void check_state_signal(void)
     Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
     stcGpioCfg.enDir = GpioDirOut;
     Gpio_Init(txPort,txPin,&stcGpioCfg);
-    Gpio_SetAfMode(txPort,txPort,GpioAf2);
+    Gpio_SetAfMode(txPort,txPin,GpioAf2);
     stcGpioCfg.enDir = GpioDirIn;
     Gpio_Init(rxPort,rxPin,&stcGpioCfg);
     Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
