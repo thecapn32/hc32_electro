@@ -6,31 +6,10 @@
 #include "app_pindef.h"
 #include "common.h"
 
-/* here it is readonly */
+/* system state, here it is readonly */
 extern int state;
 
-/* variables for  */
-extern volatile int press_count;
-extern volatile int onOff_interrupt;
-extern volatile int wave_run;
-
-/* selected wave for */
-extern volatile int wave;
-
-/* hold number of current phase in running state */
-extern volatile int phase_index;
-/* hold the number 10ms passed since start of current phase*/
-extern volatile int phase_cnt;
-/* this is used by timer0 callback for controling duration of phase */
-extern volatile uint32_t phase_cnt_target;
-
-/* signal variables for interrupt to main thread communication */
-extern volatile int wake;
-extern volatile int run;
-extern volatile int pause;
-extern volatile int sleep;
-
-/* this is for buzzer */
+/* this is for buzzer if set to 1 it will beep*/
 extern volatile int beep;
 
 /* wave properties */
@@ -40,28 +19,25 @@ extern volatile uint16_t logic1;
 /* timer0 fire flag each 10mss */
 extern volatile int timer0_callback;
 
-/* for signaling writing logic0,1 to DAC */
-extern volatile int w_logic0;
-extern volatile int w_logic1;
-
 /* Timer0 callback, called every 10ms */
 void Tim0_IRQHandler(void)
 {
     /* for toggling buzzer */
-    static int bz;
+    static int i;
     if (TRUE == Bt_GetIntFlag(TIM0, BtUevIrq))
     {
+        /* for checking in main loop */
         timer0_callback = 1;
         if (beep)
         {
-            if (bz == 0)
+            if (i == 0)
             {
-                bz++;
+                i++;
                 Gpio_SetIO(buzzPort, buzzPin);
             }
             else
             {
-                bz = 0;
+                i = 0;
                 Gpio_ClrIO(buzzPort, buzzPin);
             }
         }
@@ -108,7 +84,7 @@ void Tim1_IRQHandler(void)
     {
         if (i == 0)
         {
-            i = 1;
+            i++;
             Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
             Dac_SoftwareTriggerCmd();
         }

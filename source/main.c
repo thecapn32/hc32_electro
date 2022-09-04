@@ -94,20 +94,19 @@ volatile uint32_t I_SEN;
 /*t*/
 /* for buzzer */
 
-volatile int press_count = 0;
+volatile int onOff_count = 0;
+
 /* sw1 pressed flag for timer0 */
 volatile int onOff_interrupt = 0;
 
-/* in pause state count */
+/* in pause state timer counter */
 volatile uint32_t pause_cnt = 0;
 
+/* in test state timer counter */
 volatile uint32_t test_cnt = 0;
 
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
-
-
-volatile int adc_logic;
 
 uint8_t u8TxData[2] = {'H','i'};
 
@@ -143,9 +142,9 @@ static void long_press_action()
 /* this function if for ON_OFF button */
 static void check_onoff(void)
 {
-  press_count++;
+  onOff_count++;
   // if passed 3sec
-  if (press_count == 300) // period is 10ms
+  if (onOff_count == 300) // period is 10ms
   {
     // disable timer interrupt function
     onOff_interrupt = 0;
@@ -343,6 +342,7 @@ static void check_state_signal(void)
     Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
     // enable uart and start listening
     state = TEST;
+    Bt_M0_Run(TIM0); // running timer 0 for test
   }
 }
 
@@ -417,6 +417,7 @@ int32_t main(void)
   App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
+  
 	//App_DacCali();
 	//App_AdcSglCfg();
 

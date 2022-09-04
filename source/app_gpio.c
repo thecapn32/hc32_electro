@@ -9,10 +9,11 @@
 extern volatile int state;
 
 extern volatile int wave;
-extern volatile int press_count;
+extern volatile int onOff_count;
 extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
+/* for changing the selected wave */
 extern volatile int change_wave;
 extern volatile int test_mode;
 
@@ -177,7 +178,7 @@ void PortB_IRQHandler(void)
     if(TRUE == Gpio_GetIrqStatus(onOffPort, onOffPin))
     {
         /* this is timer0 callback function to recognise long press */
-        press_count = 0;
+        onOff_count = 0;
         /*  */
         onOff_interrupt = 1;
 		
@@ -191,6 +192,7 @@ void PortB_IRQHandler(void)
     /* if sw2 pin pressed */
     if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
     {
+        /* this is for testing and setting device */
         if(i)
         {
             Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
