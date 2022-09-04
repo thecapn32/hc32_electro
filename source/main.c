@@ -528,6 +528,7 @@ int32_t main(void)
               Uart_SendDataPoll(M0P_UART0,'N');
               Uart_SendDataPoll(M0P_UART0,'E');
               Uart_SendDataPoll(M0P_UART0,'\n');
+              test_cur_index = 0;
             }
           }
         }
