@@ -113,7 +113,7 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
+volatile uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
 
 static int test_cur_index = 0;
 
@@ -541,7 +541,7 @@ int32_t main(void)
             if(test_cur_index > 3)
             {
               /*check if s\n is not written */
-              uint8_t sn[8];
+              volatile uint8_t sn[8];
               read_sn(sn);
               uart_sn_value(sn);
               uart_sn_print();
