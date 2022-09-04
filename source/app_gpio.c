@@ -14,6 +14,8 @@ extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
 
+extern volatile int test_mode;
+
 /* make all pins ready to enter low power mode */
 void lowPowerGpios(void)
 {
@@ -194,12 +196,16 @@ void PortB_IRQHandler(void)
                 wave = 1;
                 Gpio_ClrIO(wav0LedPort, wav0LedPin);
                 Gpio_SetIO(wav1LedPort, wav1LedPin);
-                
+                Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
+                Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
+                test_mode = 1;
             }
             else {
                 wave = 0;
                 Gpio_SetIO(wav0LedPort, wav0LedPin);
                 Gpio_ClrIO(wav1LedPort, wav1LedPin);
+                Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+                Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
             }
         }
         Gpio_ClearIrq(wavSelPort, wavSelPin);

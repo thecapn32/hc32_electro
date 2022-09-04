@@ -65,4 +65,12 @@
 #define dacPort GpioPortA
 #define dacPin  GpioPin4
 
+/* UART pins*/
+#define txPort GpioPortA
+#define txPin  GpioPin14
+
+#define rxPort GpioPortA
+#define rxPin  GpioPin13
+
+
 #endif

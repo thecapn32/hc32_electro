@@ -21,6 +21,7 @@
 #include "lpm.h"
 #include "dac.h"
 #include "adc.h"
+#include "uart.h"
 
 #include "app_pindef.h"
 #include "app_gpio.h"
@@ -107,6 +108,8 @@ volatile int timer0_callback = 0;
 
 
 volatile int adc_logic;
+
+uint8_t u8TxData[2] = {'H','i'};
 
 /* Configure system clock*/
 void App_ClkCfg(void)
@@ -197,6 +200,33 @@ static int get_dacVal_index(void)
   default:
     return -1;
   }
+}
+
+void App_UartCfg(void)
+{
+  stc_uart_cfg_t  stcCfg;
+  stc_uart_multimode_t stcMulti;
+  stc_uart_baud_t stcBaud;
+
+  DDL_ZERO_STRUCT(stcCfg);
+  DDL_ZERO_STRUCT(stcMulti);
+  DDL_ZERO_STRUCT(stcBaud);
+  
+  Sysctrl_SetPeripheralGate(SysctrlPeripheralUart0,TRUE);//UART0外设模块时钟使能
+  
+  stcCfg.enRunMode = UartMskMode3;     //模式3
+  stcCfg.enStopBit = UartMsk1bit;      //1位停止位
+  stcCfg.enMmdorCk = UartMskEven;      //偶校验
+  stcCfg.stcBaud.u32Baud = 9600;       //波特率9600
+  stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;         //通道采样分频配置
+  stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq();    //获得外设时钟（PCLK）频率值
+  Uart_Init(M0P_UART0, &stcCfg);       //串口初始化
+
+  Uart_ClrStatus(M0P_UART0,UartRC);    //清接收请求
+  Uart_ClrStatus(M0P_UART0,UartTC);    //清发送请求
+  Uart_EnableIrq(M0P_UART0,UartRxIrq); //使能串口接收中断
+  Uart_EnableIrq(M0P_UART0,UartTxIrq); //使能串口发送中断
+
 }
 
 static void check_state_signal(void)
@@ -314,7 +344,19 @@ static void check_state_signal(void)
   if (test_mode)
   {
     test_mode = 0;
+    stc_gpio_cfg_t stcGpioCfg;
+    
+    DDL_ZERO_STRUCT(stcGpioCfg);
+    
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
+    stcGpioCfg.enDir = GpioDirOut;
+    Gpio_Init(txPort,txPin,&stcGpioCfg);
+    Gpio_SetAfMode(txPort,txPort,GpioAf2);
+    stcGpioCfg.enDir = GpioDirIn;
+    Gpio_Init(rxPort,rxPin,&stcGpioCfg);
+    Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
     // enable uart and start listening
+    state = TEST;
   }
 }
 
@@ -400,8 +442,8 @@ int32_t main(void)
   //lowPowerGpios();
   //Lpm_GotoDeepSleep(FALSE);
   /* */
-   run = 1;
-
+   //run = 1;
+  Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
   // App_AdcInit();
   while (1)
   {
@@ -468,6 +510,13 @@ int32_t main(void)
         {
           // set gpios to normal goto sleep
         }
+      }
+    }
+    if(state == TEST) 
+    {
+      for(i=0;i<2;i++)
+      {
+        Uart_SendDataPoll(M0P_UART0,u8TxData[i]);
       }
     }
   }
