@@ -13,7 +13,7 @@ extern volatile int press_count;
 extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
-
+extern volatile int change_wave;
 extern volatile int test_mode;
 
 /* make all pins ready to enter low power mode */
@@ -172,6 +172,7 @@ void setActvGpio(void)
 /* PortB interrupt handler */
 void PortB_IRQHandler(void)
 {
+    static int i;
     /* if sw1(ON_OFF) pin pressed */
     if(TRUE == Gpio_GetIrqStatus(onOffPort, onOffPin))
     {
@@ -190,23 +191,22 @@ void PortB_IRQHandler(void)
     /* if sw2 pin pressed */
     if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
     {
+        if(i)
+        {
+            Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
+            Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
+            test_mode = 1;
+            i = 0;
+        }
+        else
+        {
+            Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+            Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
+            i = 1;
+        }
         if(state == WAKEUP) 
         {
-            if(wave == 0) {
-                wave = 1;
-                Gpio_ClrIO(wav0LedPort, wav0LedPin);
-                Gpio_SetIO(wav1LedPort, wav1LedPin);
-                Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
-                Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
-                test_mode = 1;
-            }
-            else {
-                wave = 0;
-                Gpio_SetIO(wav0LedPort, wav0LedPin);
-                Gpio_ClrIO(wav1LedPort, wav1LedPin);
-                Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
-                Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
-            }
+            change_wave = 1;
         }
         Gpio_ClearIrq(wavSelPort, wavSelPin);
     }

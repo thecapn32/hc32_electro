@@ -431,6 +431,7 @@ int32_t main(void)
   setActvGpio();
   App_DACInit();
   App_AdcInit();
+  App_UartCfg();
 	//App_AdcSglCfg();
 	//App_DacCali();
   App_Timer0Cfg();
