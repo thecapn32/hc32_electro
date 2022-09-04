@@ -130,13 +130,13 @@ void flash_init(void)
 void read_sn(uint8_t *t)
 {
   t[0] = *((volatile uint8_t*)flash_Addr);
-  t[1] = *((volatile uint8_t*)flash_Addr);
-  t[2] = *((volatile uint8_t*)flash_Addr);
-  t[3] = *((volatile uint8_t*)flash_Addr);
-  t[4] = *((volatile uint8_t*)flash_Addr);
-  t[5] = *((volatile uint8_t*)flash_Addr);
-  t[6] = *((volatile uint8_t*)flash_Addr);
-  t[7] = *((volatile uint8_t*)flash_Addr);
+  t[1] = *((volatile uint8_t*)flash_Addr + 1);
+  t[2] = *((volatile uint8_t*)flash_Addr + 2);
+  t[3] = *((volatile uint8_t*)flash_Addr + 3);
+  t[4] = *((volatile uint8_t*)flash_Addr + 4);
+  t[5] = *((volatile uint8_t*)flash_Addr + 5);
+  t[6] = *((volatile uint8_t*)flash_Addr + 6);
+  t[7] = *((volatile uint8_t*)flash_Addr + 7);
 }
 
 /* Configure system clock*/
