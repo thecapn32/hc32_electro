@@ -127,7 +127,7 @@ void flash_init(void)
   }
 }
 
-void read_sn(unit8_t *t)
+void read_sn(uint8_t *t)
 {
   t[0] = *((volatile uint8_t*)flash_Addr);
   t[1] = *((volatile uint8_t*)flash_Addr);
@@ -440,6 +440,7 @@ int32_t main(void)
   int wave_flash_cnt = 0;
 
   /* System configuration */
+  flash_init();
   setLpGpio();
   setActvGpio();
   App_DACInit();
