@@ -87,6 +87,8 @@ const int dacCur[9] = {-100, -80, -50, -20, 0, 20, 50, 80, 100};
 
 uint16_t dacCal[9] = {752, 958, 1288, 1597, 1816, 2081, 4090, 4090, 4090};
 
+const uint16_t test_cur[4] = {1975, 2532, 3015, 4090};
+
 volatile uint32_t VBAT;
 volatile uint32_t V_SEN;
 volatile uint32_t T_SEN;
@@ -108,7 +110,9 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-uint8_t u8TxData[2] = {'H','i'};
+uint8_t u8TxData[2] = {'O','K'};
+
+static int test_cur_index = 0;
 
 /* Configure system clock*/
 void App_ClkCfg(void)
@@ -343,6 +347,7 @@ static void check_state_signal(void)
     // enable uart and start listening
     state = TEST;
     Bt_M0_Run(TIM0); // running timer 0 for test
+    test_cur_index = 0;
   }
 }
 
@@ -496,9 +501,36 @@ int32_t main(void)
       if (state == TEST)
       {
         /* Testing uart for now*/
-        for(int i=0;i<2;i++)
+        if((Uart_GetStatus(M0P_UART0, UartFE))||(Uart_GetStatus(M0P_UART0, UartPE)))
         {
-          Uart_SendDataPoll(M0P_UART0,u8TxData[i]);
+          Uart_ClrStatus(M0P_UART0, UartFE);
+          Uart_ClrStatus(M0P_UART0, UartPE);
+        }
+        if(Uart_GetStatus(M0P_UART0,UartRC))
+        {
+          Uart_ClrStatus(M0P_UART0,UartRC);
+          u8TxData[0] = Uart_ReceiveData(M0P_UART0);
+          if(u8TxData[0] == '1')
+          {
+            Uart_SendDataPoll(M0P_UART0,'T');
+            Uart_SendDataPoll(M0P_UART0,'E');
+            Uart_SendDataPoll(M0P_UART0,'S');
+            Uart_SendDataPoll(M0P_UART0,'T');
+            Uart_SendDataPoll(M0P_UART0, test_cur_index + '0');
+            Uart_SendDataPoll(M0P_UART0,'\n');
+            Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
+            /* trigger by sw */
+            Dac_SoftwareTriggerCmd();
+            test_cur_index++;
+            if(test_cur_index > 3)
+            {
+              Uart_SendDataPoll(M0P_UART0,'D');
+              Uart_SendDataPoll(M0P_UART0,'O');
+              Uart_SendDataPoll(M0P_UART0,'N');
+              Uart_SendDataPoll(M0P_UART0,'E');
+              Uart_SendDataPoll(M0P_UART0,'\n');
+            }
+          }
         }
         /* timer to check if it is passed 30 in test mode */
         test_cnt++;
