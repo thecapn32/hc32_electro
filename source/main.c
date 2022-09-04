@@ -519,7 +519,6 @@ int32_t main(void)
             Uart_SendDataPoll(M0P_UART0, test_cur_index + '0');
             Uart_SendDataPoll(M0P_UART0,'\n');
             Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
-            /* trigger by sw */
             Dac_SoftwareTriggerCmd();
             test_cur_index++;
             if(test_cur_index > 3)
