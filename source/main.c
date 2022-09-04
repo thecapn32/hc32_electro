@@ -514,7 +514,7 @@ int32_t main(void)
     }
     if(state == TEST) 
     {
-      for(i=0;i<2;i++)
+      for(int i=0;i<2;i++)
       {
         Uart_SendDataPoll(M0P_UART0,u8TxData[i]);
       }
