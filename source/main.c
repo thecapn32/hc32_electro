@@ -130,13 +130,13 @@ void flash_init(void)
 void read_sn(uint8_t *t)
 {
   t[0] = *((volatile uint8_t*)flash_Addr);
-  t[1] = *((volatile uint8_t*)flash_Addr + 1);
-  t[2] = *((volatile uint8_t*)flash_Addr + 2);
-  t[3] = *((volatile uint8_t*)flash_Addr + 3);
-  t[4] = *((volatile uint8_t*)flash_Addr + 4);
-  t[5] = *((volatile uint8_t*)flash_Addr + 5);
-  t[6] = *((volatile uint8_t*)flash_Addr + 6);
-  t[7] = *((volatile uint8_t*)flash_Addr + 7);
+  t[1] = *((volatile uint8_t*)flash_Addr + 8);
+  t[2] = *((volatile uint8_t*)flash_Addr + 16);
+  t[3] = *((volatile uint8_t*)flash_Addr + (8 * 3));
+  t[4] = *((volatile uint8_t*)flash_Addr + (8 * 4));
+  t[5] = *((volatile uint8_t*)flash_Addr + (8 * 5));
+  t[6] = *((volatile uint8_t*)flash_Addr + (8 * 6));
+  t[7] = *((volatile uint8_t*)flash_Addr + (8 * 7));
 }
 
 /* Configure system clock*/
@@ -559,7 +559,7 @@ int32_t main(void)
                      (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
                   {
                     Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
-                    Flash_WriteByte(flash_Addr + i, u8TxData[0]);
+                    Flash_WriteByte(flash_Addr + (8 * i), u8TxData[0]);
                     i++;
                   }
                 }
@@ -578,6 +578,8 @@ int32_t main(void)
         {
           // set gpios to normal goto sleep
         }
+        /* make all leds blink HMI */
+
       }
     }
   }
