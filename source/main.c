@@ -22,11 +22,14 @@
 #include "dac.h"
 #include "adc.h"
 #include "uart.h"
+#include "flash.h"
 
 #include "app_pindef.h"
 #include "app_gpio.h"
 #include "app_timer.h"
 #include "app_adcdac.h"
+#include "app_uart.h"
+
 //#include "common.h"
 enum device_state_t
 {
@@ -110,9 +113,31 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-uint8_t u8TxData[2] = {'O','K'};
+uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
 
 static int test_cur_index = 0;
+
+const uint32_t flash_Addr = 0x1ff00;
+
+void flash_init(void)
+{
+   while(Ok != Flash_Init(1, TRUE))
+  {
+    ;
+  }
+}
+
+void read_sn(unit8_t *t)
+{
+  t[0] = *((volatile uint8_t*)flash_Addr);
+  t[1] = *((volatile uint8_t*)flash_Addr);
+  t[2] = *((volatile uint8_t*)flash_Addr);
+  t[3] = *((volatile uint8_t*)flash_Addr);
+  t[4] = *((volatile uint8_t*)flash_Addr);
+  t[5] = *((volatile uint8_t*)flash_Addr);
+  t[6] = *((volatile uint8_t*)flash_Addr);
+  t[7] = *((volatile uint8_t*)flash_Addr);
+}
 
 /* Configure system clock*/
 void App_ClkCfg(void)
@@ -500,34 +525,48 @@ int32_t main(void)
       /* if device is in test state */
       if (state == TEST)
       {
-        /* Testing uart for now*/
-        if((Uart_GetStatus(M0P_UART0, UartFE))||(Uart_GetStatus(M0P_UART0, UartPE)))
+        u8TxData[0] = uart_read();
+        /* got no data */
+        if(u8TxData[0] != 0xff)
         {
-          Uart_ClrStatus(M0P_UART0, UartFE);
-          Uart_ClrStatus(M0P_UART0, UartPE);
-        }
-        if(Uart_GetStatus(M0P_UART0,UartRC))
-        {
-          Uart_ClrStatus(M0P_UART0,UartRC);
-          u8TxData[0] = Uart_ReceiveData(M0P_UART0);
+          /* got smth from uart reset the test timer counter*/
+          test_cnt = 0;
           if(u8TxData[0] == '1')
           {
-            Uart_SendDataPoll(M0P_UART0,'T');
-            Uart_SendDataPoll(M0P_UART0,'E');
-            Uart_SendDataPoll(M0P_UART0,'S');
-            Uart_SendDataPoll(M0P_UART0,'T');
-            Uart_SendDataPoll(M0P_UART0, test_cur_index + '0');
-            Uart_SendDataPoll(M0P_UART0,'\n');
+            uart_send_test(test_cur_index);
             Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
             Dac_SoftwareTriggerCmd();
             test_cur_index++;
             if(test_cur_index > 3)
             {
-              Uart_SendDataPoll(M0P_UART0,'D');
-              Uart_SendDataPoll(M0P_UART0,'O');
-              Uart_SendDataPoll(M0P_UART0,'N');
-              Uart_SendDataPoll(M0P_UART0,'E');
+              /*check if s\n is not written */
+              unit8_t sn[8];
+              read_sn(sn);
+              uart_sn_value(sn);
+              uart_sn_print();
+              int i = 0;
+              Uart_SendDataPoll(M0P_UART0,'0');
+              Uart_SendDataPoll(M0P_UART0,'x');
+              while (i < 8)
+              {
+                u8TxData[0] = uart_read();
+                if(u8TxData[0] != 0xff)
+                {
+                  /* check boundaries */
+                  if((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
+                     (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
+                     (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
+                  {
+                    Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+                    Flash_WriteByte(flash_Addr + i, u8TxData[0]);
+                    i++;
+                  }
+                }
+              }
               Uart_SendDataPoll(M0P_UART0,'\n');
+              Uart_SendDataPoll(M0P_UART0,'\r');
+              read_sn(sn);
+              uart_sn_value(sn);
               test_cur_index = 0;
             }
           }
