@@ -71,7 +71,7 @@ volatile int buzz_en = 1;
 
 const uint32_t l_duration[18] = {30, 5, 30, 5, 240, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
 
-const uint32_t s_duration[18] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
+const uint32_t s_duration[18] = {30, 5, 30, 5, 120, 2,  90, 3,  90, 5,  60, 5, 180, 180, 30, 5, 30, 30};
 
 //testing	
 //const uint16_t freq[18] = {781, 9700, 9700, 9700, 9700, 9700, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
@@ -173,6 +173,7 @@ static void check_onoff(void)
   }
 }
 
+/* make buzzer sound t ms */
 static void buzz_beep(int t)
 {
   if (buzz_en)
@@ -185,23 +186,7 @@ static void buzz_beep(int t)
   }
 }
 
-static int get_dacVal_index(void)
-{
-  switch (dacCur[phase_index])
-  {
-  case 100:
-    return 0;
-  case 80:
-    return 1;
-  case 50:
-    return 2;
-  case 20:
-    return 3;
-  default:
-    return -1;
-  }
-}
-
+/* uart configuration */
 void App_UartCfg(void)
 {
   stc_uart_cfg_t  stcCfg;
@@ -229,6 +214,7 @@ void App_UartCfg(void)
 
 }
 
+/* checking signal & change system state */
 static void check_state_signal(void)
 {
   if (wake)
@@ -360,6 +346,7 @@ static void check_state_signal(void)
   }
 }
 
+/* checking running wave phase */
 static void check_phase()
 {
   /* this counts number of times wave could run */
@@ -421,48 +408,45 @@ int32_t main(void)
   
   int wave_flash = 0;
   int wave_flash_cnt = 0;
-  /* DAC unit init */
-  // App_DACInit();
-  /* ADC unit init */
 
-  /* Timer0 init */
-  delay1ms(1000);
+  /* System configuration */
   setLpGpio();
   setActvGpio();
   App_DACInit();
   App_AdcInit();
   App_UartCfg();
-	//App_AdcSglCfg();
-	//App_DacCali();
   App_Timer0Cfg();
   App_Timer1Cfg();
+	//App_DacCali();
+	//App_AdcSglCfg();
 
-  /* enable interrupt on on_off button */
-  /* enable interrupt on chrg */
-  /* enable interrupt on usb_detect */
+  /* putting system to deepsleep */
   //lowPowerGpios();
   //Lpm_GotoDeepSleep(FALSE);
-  /* */
-   //run = 1;
+  /* for testing */
+  //run = 1;
   Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+
   // App_AdcInit();
   while (1)
   {
     check_state_signal();
-    //check if timer0(10ms period) is fired
+    /* check if timer0(10ms period) is fired */
     if (timer0_callback)
     {
       timer0_callback = 0;
-      /* for on_off button */
+      /* for on_off button state */
       if (onOff_interrupt)
       {
         check_onoff();
       }
+      /* if device is in running state */
       if (state == RUNNING)
       {
         check_phase();
+        /* flash selected wave led */
         wave_flash_cnt++;
-        if (wave_flash_cnt >= 10)
+        if (wave_flash_cnt >= 30)
         {
           wave_flash_cnt = 0;
           if (wave)
@@ -477,11 +461,14 @@ int32_t main(void)
           }
         }
       }
+      /* if device is in pause state */
       if (state == PAUSE)
       {
+        /* timer counter to detect if it is passed 15 minutes in pause mode */
         pause_cnt++;
+        /* */
         wave_flash_cnt++;
-        if (wave_flash_cnt >= 30)
+        if (wave_flash_cnt >= 70)
         {
           wave_flash_cnt = 0;
           if (wave)
@@ -504,20 +491,20 @@ int32_t main(void)
           sleep = 1;
         }
       }
+      /* if device is in test state */
       if (state == TEST)
       {
+        /* Testing uart for now*/
+        for(int i=0;i<2;i++)
+        {
+          Uart_SendDataPoll(M0P_UART0,u8TxData[i]);
+        }
+        /* timer to check if it is passed 30 in test mode */
         test_cnt++;
         if (test_cnt >= 3000)
         {
           // set gpios to normal goto sleep
         }
-      }
-    }
-    if(state == TEST) 
-    {
-      for(int i=0;i<2;i++)
-      {
-        Uart_SendDataPoll(M0P_UART0,u8TxData[i]);
       }
     }
   }
