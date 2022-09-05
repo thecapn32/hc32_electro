@@ -186,6 +186,13 @@ static void check_onoff(void)
     // take action acording to state
     long_press_action();
   }
+  // if pressed 1 sec check if sw1 is also pressed then changed
+  else if (onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
+  {
+    // disable timer interrupt function
+    onOff_interrupt = 0;
+    buzz_en = !buzz_en;
+  }
   // if the button is released -> single click
   else if (TRUE == Gpio_GetInputIO(onOffPort, onOffPin))
   {
