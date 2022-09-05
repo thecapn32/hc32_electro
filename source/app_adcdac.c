@@ -38,7 +38,7 @@ void App_AdcInit(void)
     Sysctrl_SetPeripheralGate(SysctrlPeripheralAdcBgr, TRUE); 
     Bgr_BgrEnable();
     ///< ADC ?????
-    stcAdcCfg.enAdcMode         = AdcSglMode;
+    stcAdcCfg.enAdcMode         = AdcScanMode;//AdcSglMode;
     stcAdcCfg.enAdcClkDiv       = AdcMskClkDiv1;
     stcAdcCfg.enAdcSampCycleSel = AdcMskSampCycle8Clk;
     stcAdcCfg.enAdcRefVolSel    = AdcMskRefVolSelExtern1;
