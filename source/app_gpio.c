@@ -44,13 +44,14 @@ void lowPowerGpios(void)
     ///< enable pulldown for all pins except on_off pin and vbat
     // and also leds for charging and also full charge
     M0P_GPIO->PAPD = 0xFF9F;  //vbat(PA05) t_sen(PA06) is pullup
-    M0P_GPIO->PBPD = 0xFFDF;  //on_off input is pullup it is configured
+    M0P_GPIO->PBPD = 0xFFCF;  //on_off(in setLpGpio func) & wave_select(here) input is pullup it is configured
     M0P_GPIO->PCPD = 0xFFFF;
     M0P_GPIO->PDPD = 0xFFFF;
     M0P_GPIO->PEPD = 0xFFFF;
     M0P_GPIO->PFPD = 0xFFFF;
     //enable pullup for vbat & t_sen pin
 	M0P_GPIO->PAPU = 0x0060;
+    M0P_GPIO->PBPU = 0x0010; //enable pullup
 }
 
 /* setup GPIOs that stay active during DeepSleep */
@@ -183,8 +184,10 @@ void PortB_IRQHandler(void)
         onOff_interrupt = 1;
 		
         /* start timer0 */
-        if(state == SLEEP)
+        if(state == SLEEP) {
             Bt_M0_Run(TIM0);
+        
+        }
         /* Clear interrupt */
         Gpio_ClearIrq(onOffPort, onOffPin);
     }

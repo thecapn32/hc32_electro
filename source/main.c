@@ -63,8 +63,8 @@ volatile uint16_t logic1 = 4000;
 /* */
 
 /* selected wave to run */
-//wave 0 = long wave
-//wave 1 = short wave
+// wave 0 = long wave
+// wave 1 = short wave
 volatile int wave = 0;
 
 /* for making buzzer beep */
@@ -74,18 +74,18 @@ volatile int buzz_en = 1;
 
 const uint32_t l_duration[18] = {30, 5, 30, 5, 240, 2, 180, 3, 180, 5, 120, 5, 360, 360, 90, 5, 90, 90};
 
-const uint32_t s_duration[18] = {30, 5, 30, 5, 120, 2,  90, 3,  90, 5,  60, 5, 180, 180, 30, 5, 30, 30};
+const uint32_t s_duration[18] = {30, 5, 30, 5, 120, 2, 90, 3, 90, 5, 60, 5, 180, 180, 30, 5, 30, 30};
 
-//testing	
-//const uint16_t freq[18] = {781, 9700, 9700, 9700, 9700, 9700, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
-//                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
+// testing
+// const uint16_t freq[18] = {781, 9700, 9700, 9700, 9700, 9700, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
+//                        {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
 const uint16_t freq[18] = {13, 0, 16, 0, 26, 0, 390, 0, 781, 0, 0xffff, 0, 781, 9700, 26000, 0, 78, 1562};
 //                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
 const uint32_t dacCur_r[18] = {20, 0, 20, 0, 20, 0, 100, 0, 20, 0, 80, 0, 50, 80, 50, 0, 50, 100};
 
-const uint16_t dac_16Val_pos[18] = {2203, 1975, 2203, 1975, 2203, 1975, 3015, 1975, 2203, 
+const uint16_t dac_16Val_pos[18] = {2203, 1975, 2203, 1975, 2203, 1975, 3015, 1975, 2203,
                                     1975, 2796, 1975, 2532, 2796, 2532, 1975, 2532, 3015};
-//have an array for first time
+// have an array for first time
 const int dacCur[9] = {-100, -80, -50, -20, 0, 20, 50, 80, 100};
 
 uint16_t dacCal[9] = {752, 958, 1288, 1597, 1816, 2081, 4090, 4090, 4090};
@@ -113,7 +113,7 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
+uint8_t u8TxData[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};
 
 static int test_cur_index = 0;
 
@@ -124,14 +124,14 @@ static int check_before_run(void)
   float v = VBAT * (4.15 / 4095.0);
   float vt = T_SEN * (3.3 / 4095.0);
   float vs = V_SEN * (3.3 / 4095.0);
-  if(v < 3.4)
+  if (v < 3.4)
     return 0;
   return 1;
 }
 
 void flash_init(void)
 {
-   while(Ok != Flash_Init(1, TRUE))
+  while (Ok != Flash_Init(1, TRUE))
   {
     ;
   }
@@ -141,7 +141,7 @@ void read_sn(uint8_t *t)
 {
   for (int i = 0; i < 8; i++)
   {
-    t[i] = *((volatile uint8_t*)flash_Addr + i);
+    t[i] = *((volatile uint8_t *)flash_Addr + i);
   }
 }
 
@@ -172,6 +172,9 @@ static void long_press_action()
   case PAUSE:
     sleep = 1;
     break;
+  case TEST:
+    sleep = 1;
+    break;
   default:
     break;
   }
@@ -190,11 +193,18 @@ static void check_onoff(void)
     long_press_action();
   }
   // if pressed 1 sec check if sw1 is also pressed then changed
-  else if (state != SLEEP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
+  else if (onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
   {
     // disable timer interrupt function
     onOff_interrupt = 0;
-    buzz_en = !buzz_en;
+    if(state == SLEEP)
+    {
+      test_mode = 1;
+    }
+    else 
+    {
+      buzz_en = !buzz_en;
+    }
   }
   // if the button is released -> single click
   else if (TRUE == Gpio_GetInputIO(onOffPort, onOffPin))
@@ -233,29 +243,28 @@ static void buzz_beep(int t)
 /* uart configuration */
 void App_UartCfg(void)
 {
-  stc_uart_cfg_t  stcCfg;
+  stc_uart_cfg_t stcCfg;
   stc_uart_multimode_t stcMulti;
   stc_uart_baud_t stcBaud;
 
   DDL_ZERO_STRUCT(stcCfg);
   DDL_ZERO_STRUCT(stcMulti);
   DDL_ZERO_STRUCT(stcBaud);
-  
-  Sysctrl_SetPeripheralGate(SysctrlPeripheralUart0,TRUE);//UART0外设模块时钟使能
-  
-  stcCfg.enRunMode = UartMskMode3;     //模式3
-  stcCfg.enStopBit = UartMsk1bit;      //1位停止位
-  stcCfg.enMmdorCk = UartMskEven;      //偶校验
-  stcCfg.stcBaud.u32Baud = 9600;       //波特率9600
-  stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;         //通道采样分频配置
-  stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq();    //获得外设时钟（PCLK）频率值
-  Uart_Init(M0P_UART0, &stcCfg);       //串口初始化
 
-  Uart_ClrStatus(M0P_UART0,UartRC);    //清接收请求
-  Uart_ClrStatus(M0P_UART0,UartTC);    //清发送请求
-  Uart_EnableIrq(M0P_UART0,UartRxIrq); //使能串口接收中断
-  Uart_EnableIrq(M0P_UART0,UartTxIrq); //使能串口发送中断
+  Sysctrl_SetPeripheralGate(SysctrlPeripheralUart0, TRUE); // UART0外设模块时钟使能
 
+  stcCfg.enRunMode = UartMskMode3;                //模式3
+  stcCfg.enStopBit = UartMsk1bit;                 // 1位停止位
+  stcCfg.enMmdorCk = UartMskEven;                 //偶校验
+  stcCfg.stcBaud.u32Baud = 9600;                  //波特率9600
+  stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;      //通道采样分频配置
+  stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq(); //获得外设时钟（PCLK）频率值
+  Uart_Init(M0P_UART0, &stcCfg);                  //串口初始化
+
+  Uart_ClrStatus(M0P_UART0, UartRC);    //清接收请求
+  Uart_ClrStatus(M0P_UART0, UartTC);    //清发送请求
+  Uart_EnableIrq(M0P_UART0, UartRxIrq); //使能串口接收中断
+  Uart_EnableIrq(M0P_UART0, UartTxIrq); //使能串口发送中断
 }
 
 /* checking signal & change system state */
@@ -265,28 +274,27 @@ static void check_state_signal(void)
   {
     /* clear flag */
     wake = 0;
-    if(wave == 0)
+    if (wave == 0)
     {
       Gpio_SetIO(wav0LedPort, wav0LedPin);
       Gpio_ClrIO(wav1LedPort, wav1LedPin);
-      
     }
     else
     {
       Gpio_ClrIO(wav0LedPort, wav0LedPin);
       Gpio_SetIO(wav1LedPort, wav1LedPin);
     }
-    
-    if(state == SLEEP)
+
+    if (state == SLEEP)
     {
       /* set gpio pin modes enable necessary pins */
       setActvGpio();
       buzz_beep(1000);
       // App_DacCali();
       Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
-    } 
+    }
     /* it was aborted */
-    else if(state == RUNNING) 
+    else if (state == RUNNING)
     {
       Bt_M0_Stop(TIM1);
       buzz_beep(300);
@@ -294,18 +302,17 @@ static void check_state_signal(void)
       buzz_beep(300);
     }
     state = WAKEUP;
-    
   }
   if (run)
   {
     /* clear flag */
     run = 0;
-    if(state == WAKEUP)
+    if (state == WAKEUP)
     {
-      //check VBAT and VSEN and if okay start waves
+      // check VBAT and VSEN and if okay start waves
       App_AdcJqrCfg();
       delay1ms(100);
-      if(1)//check_before_run())
+      if (1) // check_before_run())
       {
         phase_index = 0;
         phase_cnt = 0;
@@ -319,8 +326,8 @@ static void check_state_signal(void)
         Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
         /* must be set in every phase */
         Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-        //App_AdcSglCfg();
-        //Bt_M0_Run(TIM0);
+        // App_AdcSglCfg();
+        // Bt_M0_Run(TIM0);
         buzz_beep(300);
         delay1ms(500);
         buzz_beep(300);
@@ -334,14 +341,14 @@ static void check_state_signal(void)
         sleep = 1;
       }
     }
-    else if(state == PAUSE) 
+    else if (state == PAUSE)
     {
       uint16_t u16Period = freq[phase_index];
       /* Run timer1 for generate wave values on DAC */
       Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
       /* must be set in every phase */
       Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-      //App_AdcSglCfg();
+      // App_AdcSglCfg();
       buzz_beep(300);
       delay1ms(500);
       buzz_beep(300);
@@ -373,7 +380,7 @@ static void check_state_signal(void)
     /* clear flag */
     sleep = 0;
     /* long beep */
-    
+
     Bt_M0_Stop(TIM1);
     Gpio_DisableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
     /* disable dac everything else running */
@@ -404,20 +411,20 @@ static void check_state_signal(void)
   if (test_mode)
   {
     test_mode = 0;
-    stc_gpio_cfg_t stcGpioCfg;
-    
-    DDL_ZERO_STRUCT(stcGpioCfg);
-    
-    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
-    stcGpioCfg.enDir = GpioDirOut;
-    Gpio_Init(txPort,txPin,&stcGpioCfg);
-    Gpio_SetAfMode(txPort,txPin,GpioAf2);
-    stcGpioCfg.enDir = GpioDirIn;
-    Gpio_Init(rxPort,rxPin,&stcGpioCfg);
-    Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
+    // stc_gpio_cfg_t stcGpioCfg;
+
+    // DDL_ZERO_STRUCT(stcGpioCfg);
+
+    // Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
+    // stcGpioCfg.enDir = GpioDirOut;
+    // Gpio_Init(txPort,txPin,&stcGpioCfg);
+    // Gpio_SetAfMode(txPort,txPin,GpioAf2);
+    // stcGpioCfg.enDir = GpioDirIn;
+    // Gpio_Init(rxPort,rxPin,&stcGpioCfg);
+    // Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
     // enable uart and start listening
     state = TEST;
-    Bt_M0_Run(TIM0); // running timer 0 for test
+    // Bt_M0_Run(TIM0); // running timer 0 for test
     test_cur_index = 0;
   }
 }
@@ -449,7 +456,7 @@ static void check_phase()
       /* if phase frequency is 0 (pause phase) */
       if (freq[phase_index] == 0)
       {
-				Bt_M0_Stop(TIM1);
+        Bt_M0_Stop(TIM1);
         Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
         Dac_SoftwareTriggerCmd();
       }
@@ -469,8 +476,8 @@ static void check_phase()
     /* it is over device must go back to sleep */
     else
     {
-      //make system go backto wakeup state
-      //spot timer1
+      // make system go backto wakeup state
+      // spot timer1
       wake = 1;
       Bt_M0_Stop(TIM1);
     }
@@ -481,31 +488,31 @@ int32_t main(void)
 {
   /* init gpios that are active in deep sleep mode */
   App_ClkCfg();
-  
+
   int wave_flash = 0;
   int wave_flash_cnt = 0;
 
   /* System configuration */
   flash_init();
   setLpGpio();
-  //setActvGpio();
+  // setActvGpio();
   App_DACInit();
   App_AdcInit_scan();
   App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
-  
-	//App_DacCali();
-	//App_AdcSglCfg();
+
+  // App_DacCali();
+  // App_AdcSglCfg();
 
   /* putting system to deepsleep */
   lowPowerGpios();
   Lpm_GotoDeepSleep(FALSE);
   /* for testing */
-  //run = 1;
-  //Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+  // run = 1;
+  // Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
 
-  //App_AdcInit();
+  // App_AdcInit();
   while (1)
   {
     check_state_signal();
@@ -570,75 +577,87 @@ int32_t main(void)
       /* if device is in test state */
       if (state == TEST)
       {
-        u8TxData[0] = uart_read();
-        /* got no data */
-        if(u8TxData[0] != 0xff)
-        {
-          /* got smth from uart reset the test timer counter*/
-          test_cnt = 0;
-          if(u8TxData[0] == '1')
-          {
-            uart_send_test(test_cur_index);
-            Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
-            Dac_SoftwareTriggerCmd();
-            test_cur_index++;
-            if(test_cur_index > 3)
-            {
-              /*check if s\n is not written */
-              uint8_t sn[8];
-              read_sn(sn);
-              uart_sn_value(sn);
-              uart_sn_print();
-              int i = 0;
-              Uart_SendDataPoll(M0P_UART0,'0');
-              Uart_SendDataPoll(M0P_UART0,'x');
-              while(Ok != Flash_SectorErase(flash_Addr))
-              {
-                ;
-              }
-              read_sn(sn);
-              uart_sn_value(sn);
-              while (i < 8)
-              {
-                u8TxData[0] = uart_read();
-                if(u8TxData[0] != 0xff)
-                {
-                  /* check boundaries */
-                  if((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
-                     (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
-                     (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
-                  {
-                    if(Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
-                    {
-                      Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
-                      i++;
-                    }
-                    else 
-                    {
-                      Uart_SendDataPoll(M0P_UART0, 'E');
-                      Uart_SendDataPoll(M0P_UART0, 'R');
-                      Uart_SendDataPoll(M0P_UART0, 'R');
-                    }
-                    
-                  }
-                }
-              }
-              Uart_SendDataPoll(M0P_UART0,'\n');
-              Uart_SendDataPoll(M0P_UART0,'\r');
-              read_sn(sn);
-              uart_sn_value(sn);
-              test_cur_index = 0;
-            }
-          }
-        }
+        setActvGpio();
+        //change swd pins to uart
+        // u8TxData[0] = uart_read();
+        // /* got no data */
+        // if (u8TxData[0] != 0xff)
+        // {
+        //   /* got smth from uart reset the test timer counter*/
+        //   test_cnt = 0;
+        //   if (u8TxData[0] == '1')
+        //   {
+        //     uart_send_test(test_cur_index);
+        //     Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
+        //     Dac_SoftwareTriggerCmd();
+        //     test_cur_index++;
+        //     if (test_cur_index > 3)
+        //     {
+        //       /*check if s\n is not written */
+        //       uint8_t sn[8];
+        //       read_sn(sn);
+        //       uart_sn_value(sn);
+        //       uart_sn_print();
+        //       int i = 0;
+        //       Uart_SendDataPoll(M0P_UART0, '0');
+        //       Uart_SendDataPoll(M0P_UART0, 'x');
+        //       while (Ok != Flash_SectorErase(flash_Addr))
+        //       {
+        //         ;
+        //       }
+        //       read_sn(sn);
+        //       uart_sn_value(sn);
+        //       while (i < 8)
+        //       {
+        //         u8TxData[0] = uart_read();
+        //         if (u8TxData[0] != 0xff)
+        //         {
+        //           /* check boundaries */
+        //           if ((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
+        //               (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
+        //               (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
+        //           {
+        //             if (Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
+        //             {
+        //               Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+        //               i++;
+        //             }
+        //             else
+        //             {
+        //               Uart_SendDataPoll(M0P_UART0, 'E');
+        //               Uart_SendDataPoll(M0P_UART0, 'R');
+        //               Uart_SendDataPoll(M0P_UART0, 'R');
+        //             }
+        //           }
+        //         }
+        //       }
+        //       Uart_SendDataPoll(M0P_UART0, '\n');
+        //       Uart_SendDataPoll(M0P_UART0, '\r');
+        //       read_sn(sn);
+        //       uart_sn_value(sn);
+        //       test_cur_index = 0;
+        //     }
+        //   }
+        // } 
         /* timer to check if it is passed 30 in test mode */
+        wave_flash_cnt++;
+        if (wave_flash_cnt >= 70)
+        {
+          wave_flash_cnt = 0;
+          Gpio_WriteOutputIO(wav0LedPort, wav0LedPin, wave_flash);
+          Gpio_WriteOutputIO(wav1LedPort, wav1LedPin, wave_flash);
+          Gpio_WriteOutputIO(pwrLedPort, pwrLedPin, wave_flash);
+          Gpio_WriteOutputIO(fullChrgLedPort, fullChrgLedPin, wave_flash);
+          Gpio_WriteOutputIO(lowChrgLedPort, lowChrgLedPin, wave_flash);
+          wave_flash = !wave_flash;
+        }
         test_cnt++;
         if (test_cnt >= 3000)
         {
           // set gpios to normal goto sleep
+          //sleep = 1;
         }
         /* make all leds blink HMI */
-
       }
     }
   }
