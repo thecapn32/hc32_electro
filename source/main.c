@@ -518,6 +518,7 @@ int32_t main(void)
   // Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
 
   // App_AdcInit();
+
   while (1)
   {
     check_state_signal();
@@ -599,47 +600,56 @@ int32_t main(void)
             {
               /*check if s\n is not written */
               uint8_t sn[8];
-              read_sn(sn);
-              uart_sn_value(sn);
-              uart_sn_print();
-              int i = 0;
-              Uart_SendDataPoll(M0P_UART0, '0');
-              Uart_SendDataPoll(M0P_UART0, 'x');
-              while (Ok != Flash_SectorErase(flash_Addr))
+              sn[0] = *((volatile uint8_t *)flash_Addr + 8)
+              if(s[0] != 0x53)
               {
-                ;
-              }
-              read_sn(sn);
-              uart_sn_value(sn);
-              while (i < 8)
-              {
-                u8TxData[0] = uart_read();
-                if (u8TxData[0] != 0xff)
+                /* get s/n value from uart in hex base and store it in flash */
+                read_sn(sn);
+                uart_sn_value(sn);
+                uart_sn_print();
+                while (Ok != Flash_SectorErase(flash_Addr))
                 {
-                  /* check boundaries */
-                  if ((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
-                      (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
-                      (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
+                  ;
+                }
+                read_sn(sn);
+                uart_sn_value(sn);
+                Uart_SendDataPoll(M0P_UART0, '0');
+                Uart_SendDataPoll(M0P_UART0, 'x');
+                int i = 0;
+                while (i < 8)
+                {
+                  u8TxData[0] = uart_read();
+                  if (u8TxData[0] != 0xff)
                   {
-                    if (Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
+                    /* check boundaries */
+                    if ((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
+                        (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
+                        (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
                     {
-                      Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
-                      i++;
-                    }
-                    else
-                    {
-                      Uart_SendDataPoll(M0P_UART0, 'E');
-                      Uart_SendDataPoll(M0P_UART0, 'R');
-                      Uart_SendDataPoll(M0P_UART0, 'R');
+                      if (Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
+                      {
+                        Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+                        i++;
+                      }
+                      else
+                      {
+                        Uart_SendDataPoll(M0P_UART0, 'E');
+                        Uart_SendDataPoll(M0P_UART0, 'R');
+                        Uart_SendDataPoll(M0P_UART0, 'R');
+                      }
                     }
                   }
                 }
+                Uart_SendDataPoll(M0P_UART0, '\n');
+                Uart_SendDataPoll(M0P_UART0, '\r');
+                /* save s/n wrote in flash so next time don't run it again 
+                ';
+                '*/
+                Flash_WriteByte(flash_Addr + 8, 0x53);
+                read_sn(sn);
+                uart_sn_value(sn);
+                test_cur_index = 0;
               }
-              Uart_SendDataPoll(M0P_UART0, '\n');
-              Uart_SendDataPoll(M0P_UART0, '\r');
-              read_sn(sn);
-              uart_sn_value(sn);
-              test_cur_index = 0;
             }
           }
           else if(u8TxData[0] == 'A')
@@ -722,6 +732,7 @@ int32_t main(void)
           wave_flash = !wave_flash;
         }
         test_cnt++;
+        /* check if passed 30 sec and no activity */
         if (test_cnt >= 3000)
         {
           // set gpios to normal goto sleep
