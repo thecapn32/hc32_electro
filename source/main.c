@@ -187,7 +187,7 @@ static void check_onoff(void)
     long_press_action();
   }
   // if pressed 1 sec check if sw1 is also pressed then changed
-  else if (onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)) && state != SLEEP)
+  else if (state == WAKEUP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
   {
     // disable timer interrupt function
     onOff_interrupt = 0;
