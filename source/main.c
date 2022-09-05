@@ -415,7 +415,7 @@ static void check_state_signal(void)
     // stc_gpio_cfg_t stcGpioCfg;
 
     // DDL_ZERO_STRUCT(stcGpioCfg);
-
+    setActvGpio();
     // Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
     // stcGpioCfg.enDir = GpioDirOut;
     // Gpio_Init(txPort,txPin,&stcGpioCfg);
@@ -578,7 +578,7 @@ int32_t main(void)
       /* if device is in test state */
       if (state == TEST)
       {
-        setActvGpio();
+        
         //change swd pins to uart
         // u8TxData[0] = uart_read();
         // /* got no data */
