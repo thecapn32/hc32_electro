@@ -201,6 +201,7 @@ static void check_onoff(void)
     {
       test_mode = 1;
     }
+    /* in anyother state just on/off buzzer */
     else 
     {
       buzz_en = !buzz_en;

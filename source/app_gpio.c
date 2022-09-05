@@ -51,7 +51,7 @@ void lowPowerGpios(void)
     M0P_GPIO->PFPD = 0xFFFF;
     //enable pullup for vbat & t_sen pin
 	M0P_GPIO->PAPU = 0x0060;
-    M0P_GPIO->PBPU = 0x0010; //enable pullup
+    M0P_GPIO->PBPU = 0x0030; //enable pullup
 }
 
 /* setup GPIOs that stay active during DeepSleep */
