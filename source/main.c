@@ -600,8 +600,8 @@ int32_t main(void)
             {
               /*check if s\n is not written */
               uint8_t sn[8];
-              sn[0] = *((volatile uint8_t *)flash_Addr + 8)
-              if(s[0] != 0x53)
+              sn[0] = *((volatile uint8_t *)flash_Addr + 8);
+              if(sn[0] != 0x53)
               {
                 /* get s/n value from uart in hex base and store it in flash */
                 read_sn(sn);
