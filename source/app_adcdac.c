@@ -196,7 +196,7 @@ void Adc_IRQHandler(void)
         current = (v0 - 1.24) / 24.0 * 10000.0 * 0.91;  // define CAL_CONST as 1.0 as default, and after experiment, it will be 0.970 or 1.012 like
 				if(current < 0)
 					current = -current;
-				if(adc_logic)
+				if(0)
 				{
 					adc_logic = 0;
 					if(current > 15)
