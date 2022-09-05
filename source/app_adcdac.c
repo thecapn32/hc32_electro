@@ -154,7 +154,7 @@ void App_AdcThrCfg(void)
 
 }
 
-/* single ADC measure for */
+/* single ADC measure for I_SEN*/
 void App_AdcSglCfg(void)
 {
     /* Configuring PA07 for I_SEN */

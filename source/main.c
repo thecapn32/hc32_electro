@@ -119,6 +119,16 @@ static int test_cur_index = 0;
 
 const uint32_t flash_Addr = 0x1ff00;
 
+static int check_before_run(void)
+{
+  float v = VBAT * (3.3 / 4095.0);
+  float vt = T_SEN * (3.3 / 4095.0);
+  float vs = V_SEN * (3.3 / 4095.0);
+  if(v < 3.4)
+    return 0;
+  return 1;
+}
+
 void flash_init(void)
 {
    while(Ok != Flash_Init(1, TRUE))
@@ -283,21 +293,36 @@ static void check_state_signal(void)
     if(state == WAKEUP)
     {
       //check VBAT and VSEN and if okay start waves
-      phase_index = 0;
-      phase_cnt = 0;
-      phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
-      /* set logic0 & logic 1 initial values */
-      logic0 = dac_16Val_pos[1];
-      logic1 = dac_16Val_pos[0];
-      /* get the period value of timer1 for first phase */
-      uint16_t u16Period = freq[0];
-      /* Run timer1 for generate wave values on DAC */
-      Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
-      /* must be set in every phase */
-      Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-      App_AdcSglCfg();
-			Bt_M0_Run(TIM0);
-      Bt_M0_Run(TIM1);
+      App_AdcJqrCfg();
+      delay1ms(10);
+      if(check_before_run())
+      {
+        phase_index = 0;
+        phase_cnt = 0;
+        phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
+        /* set logic0 & logic 1 initial values */
+        logic0 = dac_16Val_pos[1];
+        logic1 = dac_16Val_pos[0];
+        /* get the period value of timer1 for first phase */
+        uint16_t u16Period = freq[0];
+        /* Run timer1 for generate wave values on DAC */
+        Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
+        /* must be set in every phase */
+        Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
+        //App_AdcSglCfg();
+        //Bt_M0_Run(TIM0);
+        buzz_beep(300);
+        delay1ms(500);
+        buzz_beep(300);
+        Bt_M0_Run(TIM1);
+      }
+      else
+      {
+        Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
+        delay1ms(5000);
+        Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
+        sleep = 1;
+      }
     }
     else if(state == PAUSE) 
     {
@@ -307,6 +332,9 @@ static void check_state_signal(void)
       /* must be set in every phase */
       Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
       //App_AdcSglCfg();
+      buzz_beep(300);
+      delay1ms(500);
+      buzz_beep(300);
       Bt_M0_Run(TIM1);
     }
     /* make the wave led flash this change acording to state in timer0 callback */
@@ -522,9 +550,7 @@ int32_t main(void)
         /* if 15 min in pause */
         if (pause_cnt >= 90000)
         {
-          buzz_beep(300);
-          delay1ms(500);
-          buzz_beep(300);
+          buzz_beep(1000);
           sleep = 1;
         }
       }
