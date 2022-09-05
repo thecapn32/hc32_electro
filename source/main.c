@@ -383,6 +383,8 @@ static void check_state_signal(void)
     /* long beep */
 
     Bt_M0_Stop(TIM1);
+    Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+    Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
     Gpio_DisableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
     /* disable dac everything else running */
     /* change device state */
@@ -412,17 +414,19 @@ static void check_state_signal(void)
   if (test_mode)
   {
     test_mode = 0;
-    // stc_gpio_cfg_t stcGpioCfg;
-
-    // DDL_ZERO_STRUCT(stcGpioCfg);
+    stc_gpio_cfg_t stcGpioCfg;
+    test_cnt = 0;
+    DDL_ZERO_STRUCT(stcGpioCfg);
     setActvGpio();
-    // Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
-    // stcGpioCfg.enDir = GpioDirOut;
-    // Gpio_Init(txPort,txPin,&stcGpioCfg);
-    // Gpio_SetAfMode(txPort,txPin,GpioAf2);
-    // stcGpioCfg.enDir = GpioDirIn;
-    // Gpio_Init(rxPort,rxPin,&stcGpioCfg);
-    // Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
+    Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
+    stcGpioCfg.enDir = GpioDirOut;
+    Gpio_Init(txPort,txPin,&stcGpioCfg);
+    Gpio_SetAfMode(txPort,txPin,GpioAf2);
+    stcGpioCfg.enDir = GpioDirIn;
+    Gpio_Init(rxPort,rxPin,&stcGpioCfg);
+    Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
+    App_UartCfg();
     // enable uart and start listening
     state = TEST;
     // Bt_M0_Run(TIM0); // running timer 0 for test
@@ -499,7 +503,7 @@ int32_t main(void)
   // setActvGpio();
   App_DACInit();
   App_AdcInit_scan();
-  App_UartCfg();
+  //App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
 
@@ -580,66 +584,66 @@ int32_t main(void)
       {
         
         //change swd pins to uart
-        // u8TxData[0] = uart_read();
-        // /* got no data */
-        // if (u8TxData[0] != 0xff)
-        // {
-        //   /* got smth from uart reset the test timer counter*/
-        //   test_cnt = 0;
-        //   if (u8TxData[0] == '1')
-        //   {
-        //     uart_send_test(test_cur_index);
-        //     Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
-        //     Dac_SoftwareTriggerCmd();
-        //     test_cur_index++;
-        //     if (test_cur_index > 3)
-        //     {
-        //       /*check if s\n is not written */
-        //       uint8_t sn[8];
-        //       read_sn(sn);
-        //       uart_sn_value(sn);
-        //       uart_sn_print();
-        //       int i = 0;
-        //       Uart_SendDataPoll(M0P_UART0, '0');
-        //       Uart_SendDataPoll(M0P_UART0, 'x');
-        //       while (Ok != Flash_SectorErase(flash_Addr))
-        //       {
-        //         ;
-        //       }
-        //       read_sn(sn);
-        //       uart_sn_value(sn);
-        //       while (i < 8)
-        //       {
-        //         u8TxData[0] = uart_read();
-        //         if (u8TxData[0] != 0xff)
-        //         {
-        //           /* check boundaries */
-        //           if ((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
-        //               (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
-        //               (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
-        //           {
-        //             if (Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
-        //             {
-        //               Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
-        //               i++;
-        //             }
-        //             else
-        //             {
-        //               Uart_SendDataPoll(M0P_UART0, 'E');
-        //               Uart_SendDataPoll(M0P_UART0, 'R');
-        //               Uart_SendDataPoll(M0P_UART0, 'R');
-        //             }
-        //           }
-        //         }
-        //       }
-        //       Uart_SendDataPoll(M0P_UART0, '\n');
-        //       Uart_SendDataPoll(M0P_UART0, '\r');
-        //       read_sn(sn);
-        //       uart_sn_value(sn);
-        //       test_cur_index = 0;
-        //     }
-        //   }
-        // } 
+        u8TxData[0] = uart_read();
+        /* got no data */
+        if (u8TxData[0] != 0xff)
+        {
+          /* got smth from uart reset the test timer counter*/
+          test_cnt = 0;
+          if (u8TxData[0] == '1')
+          {
+            uart_send_test(test_cur_index);
+            Dac_SetChannelData(DacRightAlign, DacBit12, test_cur[test_cur_index]);
+            Dac_SoftwareTriggerCmd();
+            test_cur_index++;
+            if (test_cur_index > 3)
+            {
+              /*check if s\n is not written */
+              uint8_t sn[8];
+              read_sn(sn);
+              uart_sn_value(sn);
+              uart_sn_print();
+              int i = 0;
+              Uart_SendDataPoll(M0P_UART0, '0');
+              Uart_SendDataPoll(M0P_UART0, 'x');
+              while (Ok != Flash_SectorErase(flash_Addr))
+              {
+                ;
+              }
+              read_sn(sn);
+              uart_sn_value(sn);
+              while (i < 8)
+              {
+                u8TxData[0] = uart_read();
+                if (u8TxData[0] != 0xff)
+                {
+                  /* check boundaries */
+                  if ((u8TxData[0] <= '9' && u8TxData[0] >= '0') ||
+                      (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
+                      (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
+                  {
+                    if (Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
+                    {
+                      Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+                      i++;
+                    }
+                    else
+                    {
+                      Uart_SendDataPoll(M0P_UART0, 'E');
+                      Uart_SendDataPoll(M0P_UART0, 'R');
+                      Uart_SendDataPoll(M0P_UART0, 'R');
+                    }
+                  }
+                }
+              }
+              Uart_SendDataPoll(M0P_UART0, '\n');
+              Uart_SendDataPoll(M0P_UART0, '\r');
+              read_sn(sn);
+              uart_sn_value(sn);
+              test_cur_index = 0;
+            }
+          }
+        } 
         /* timer to check if it is passed 30 in test mode */
         wave_flash_cnt++;
         if (wave_flash_cnt >= 70)
@@ -656,7 +660,7 @@ int32_t main(void)
         if (test_cnt >= 3000)
         {
           // set gpios to normal goto sleep
-          //sleep = 1;
+          sleep = 1;
         }
         /* make all leds blink HMI */
       }
