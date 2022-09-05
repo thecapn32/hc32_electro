@@ -113,7 +113,7 @@ volatile uint32_t test_cnt = 0;
 /* timer0 fire flag each 10ms */
 volatile int timer0_callback = 0;
 
-volatile uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
+uint8_t u8TxData[8] = {'1','2','3','4','5','6','7','8'};
 
 static int test_cur_index = 0;
 
@@ -127,16 +127,12 @@ void flash_init(void)
   }
 }
 
-void read_sn(volatile uint8_t *t)
+void read_sn(uint8_t *t)
 {
-  t[0] = *((volatile uint8_t*)flash_Addr);
-  t[1] = *((volatile uint8_t*)flash_Addr + 8);
-  t[2] = *((volatile uint8_t*)flash_Addr + 16);
-  t[3] = *((volatile uint8_t*)flash_Addr + (8 * 3));
-  t[4] = *((volatile uint8_t*)flash_Addr + (8 * 4));
-  t[5] = *((volatile uint8_t*)flash_Addr + (8 * 5));
-  t[6] = *((volatile uint8_t*)flash_Addr + (8 * 6));
-  t[7] = *((volatile uint8_t*)flash_Addr + (8 * 7));
+  for (int i = 0; i < count; i++)
+  {
+    t[i] = *((volatile uint8_t*)flash_Addr + i);
+  }
 }
 
 /* Configure system clock*/
@@ -548,6 +544,12 @@ int32_t main(void)
               int i = 0;
               Uart_SendDataPoll(M0P_UART0,'0');
               Uart_SendDataPoll(M0P_UART0,'x');
+              while(Ok != Flash_SectorErase(flash_Addr))
+              {
+                ;
+              }
+              read_sn(sn);
+              uart_sn_value(sn);
               while (i < 8)
               {
                 u8TxData[0] = uart_read();
@@ -558,9 +560,18 @@ int32_t main(void)
                      (u8TxData[0] <= 'f' && u8TxData[0] >= 'a') ||
                      (u8TxData[0] <= 'F' && u8TxData[0] >= 'A'))
                   {
-                    Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
-                    Flash_WriteByte(flash_Addr + (8 * i), u8TxData[0]);
-                    i++;
+                    if(Ok == Flash_WriteByte(flash_Addr + i, u8TxData[0]))
+                    {
+                      Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+                      i++;
+                    }
+                    else 
+                    {
+                      Uart_SendDataPoll(M0P_UART0, 'E');
+                      Uart_SendDataPoll(M0P_UART0, 'R');
+                      Uart_SendDataPoll(M0P_UART0, 'R');
+                    }
+                    
                   }
                 }
               }
