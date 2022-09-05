@@ -294,7 +294,7 @@ static void check_state_signal(void)
     {
       //check VBAT and VSEN and if okay start waves
       App_AdcJqrCfg();
-      delay1ms(10);
+      delay1ms(100);
       if(check_before_run())
       {
         phase_index = 0;
