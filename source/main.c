@@ -187,25 +187,25 @@ static void check_onoff(void)
   // if passed 3sec
   if (onOff_count == 300) // period is 10ms
   {
-    // disable timer interrupt function
+     // disable timer interrupt function
     onOff_interrupt = 0;
-    // take action acording to state
-    long_press_action();
-  }
-  // if pressed 1 sec check if sw1 is also pressed then changed
-  else if (onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
-  {
-    // disable timer interrupt function
-    onOff_interrupt = 0;
-    if(state == SLEEP)
+    /* enter test mode */
+    if(state == SLEEP && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
     {
       test_mode = 1;
     }
-    /* in anyother state just on/off buzzer */
-    else 
+    else
     {
-      buzz_en = !buzz_en;
+      // take action acording to state
+      long_press_action();
     }
+  }
+  // if pressed 1 sec check if sw1 is also pressed then changed
+  else if (state != SLEEP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
+  {
+    // disable timer interrupt function
+    onOff_interrupt = 0;
+    buzz_en = !buzz_en;
   }
   // if the button is released -> single click
   else if (TRUE == Gpio_GetInputIO(onOffPort, onOffPin))
