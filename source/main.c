@@ -648,8 +648,8 @@ int32_t main(void)
             int i = 0;
             int timeout = 0;
             int flag = 0;
-            unit8_t FW[5] = {'T', ' ', 'V', 'E', 'R'};
-            unit8_t SN[4] = {'T', ' ', 'S', 'N'};
+            uint8_t FW[5] = {'T', ' ', 'V', 'E', 'R'};
+            uint8_t SN[4] = {'T', ' ', 'S', 'N'};
             while (1)
             {
               u8TxData[0] = uart_read();
