@@ -444,12 +444,12 @@ int32_t main(void)
   int wave_flash_cnt = 0;
 
   /* System configuration */
-  //flash_init();
+  flash_init();
   setLpGpio();
   // setActvGpio();
-  // App_DACInit();
-  // App_AdcInit();
-  // App_UartCfg();
+  App_DACInit();
+  App_AdcInit();
+  App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
   
