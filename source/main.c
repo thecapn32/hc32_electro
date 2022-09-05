@@ -644,6 +644,7 @@ int32_t main(void)
           }
           else if(u8TxData[0] == 'A')
           {
+            Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
             u8TxData[0] = 0xff;
             int i = 0;
             int timeout = 0;
@@ -678,12 +679,13 @@ int32_t main(void)
                 // wrong command
                 else 
                 {
+                  flag = 0;
                   break;
                 }
               }
-              delay1ms(100);
+              delay1ms(10);
               timeout++;
-              if(timeout == 15)
+              if(timeout == 300)
                 break;
             }
             Uart_SendDataPoll(M0P_UART0,'\n');
