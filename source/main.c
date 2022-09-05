@@ -129,7 +129,7 @@ void flash_init(void)
 
 void read_sn(uint8_t *t)
 {
-  for (int i = 0; i < count; i++)
+  for (int i = 0; i < 8; i++)
   {
     t[i] = *((volatile uint8_t*)flash_Addr + i);
   }
