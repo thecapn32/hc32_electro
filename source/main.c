@@ -582,7 +582,6 @@ int32_t main(void)
       /* if device is in test state */
       if (state == TEST)
       {
-        
         //change swd pins to uart
         u8TxData[0] = uart_read();
         /* got no data */
@@ -641,6 +640,70 @@ int32_t main(void)
               read_sn(sn);
               uart_sn_value(sn);
               test_cur_index = 0;
+            }
+          }
+          else if(u8TxData[0] == 'A')
+          {
+            u8TxData[0] = 0xff;
+            int i = 0;
+            int timeout = 0;
+            int flag = 0;
+            unit8_t FW[5] = {'T', ' ', 'V', 'E', 'R'};
+            unit8_t SN[4] = {'T', ' ', 'S', 'N'};
+            while (1)
+            {
+              u8TxData[0] = uart_read();
+              if(u8TxData[0] != 0xff)
+              {
+                Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
+                timeout = 0;
+                if(u8TxData[0] == FW[i])
+                {
+                  i++;
+                  if(i == 5)
+                  {
+                    flag = 1;
+                    break;
+                  }
+                } 
+                else if(i < 4 && u8TxData[0] == SN[i])
+                {
+                  i++;
+                  if(i == 4)
+                  {
+                    flag = 2;
+                    break;
+                  }
+                }
+                // wrong command
+                else 
+                {
+                  break;
+                }
+              }
+              delay1ms(100);
+              timeout++;
+              if(timeout == 15)
+                break;
+            }
+            Uart_SendDataPoll(M0P_UART0,'\n');
+            Uart_SendDataPoll(M0P_UART0,'\r');
+            if(flag == 1)
+            {
+              //print version number
+              Uart_SendDataPoll(M0P_UART0,'V');
+              Uart_SendDataPoll(M0P_UART0,'0');
+              Uart_SendDataPoll(M0P_UART0,'.');
+              Uart_SendDataPoll(M0P_UART0,'0');
+              Uart_SendDataPoll(M0P_UART0,'\n');
+              Uart_SendDataPoll(M0P_UART0,'\r');
+            }
+            else if(flag == 2)
+            {
+              //print SN value
+              uint8_t sn[8];
+              read_sn(sn);
+              uart_sn_value(sn);
             }
           }
         } 
