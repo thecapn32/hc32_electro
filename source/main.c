@@ -187,7 +187,7 @@ static void check_onoff(void)
     long_press_action();
   }
   // if pressed 1 sec check if sw1 is also pressed then changed
-  else if (state == WAKEUP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
+  else if (state != SLEEP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
   {
     // disable timer interrupt function
     onOff_interrupt = 0;
@@ -354,7 +354,7 @@ static void check_state_signal(void)
     pause = 0;
     /* stop timer1 from running */
     Bt_M0_Stop(TIM1);
-    Dac_SetChannelData(DacRightAlign, DacBit12, 0);
+    Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
     Dac_SoftwareTriggerCmd();
     /* Turn of DC/DC */
     /* change device state */
