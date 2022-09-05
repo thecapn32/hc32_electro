@@ -30,7 +30,7 @@ extern const uint32_t dacCur_r[18];
 extern volatile int adc_logic;
 
 /* init ADC module */
-void App_AdcInit(void)
+void App_AdcInit_scan(void)
 {
     stc_adc_cfg_t              stcAdcCfg;
 
@@ -48,6 +48,24 @@ void App_AdcInit(void)
     Adc_Init(&stcAdcCfg);
 }
 
+
+void App_AdcInit_sgl(void)
+{
+    stc_adc_cfg_t              stcAdcCfg;
+
+    DDL_ZERO_STRUCT(stcAdcCfg);
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralAdcBgr, TRUE); 
+    Bgr_BgrEnable();
+    ///< ADC ?????
+    stcAdcCfg.enAdcMode         = AdcSglMode;
+    stcAdcCfg.enAdcClkDiv       = AdcMskClkDiv1;
+    stcAdcCfg.enAdcSampCycleSel = AdcMskSampCycle8Clk;
+    stcAdcCfg.enAdcRefVolSel    = AdcMskRefVolSelExtern1;
+    stcAdcCfg.enAdcOpBuf        = AdcMskBufDisable;
+    stcAdcCfg.enInRef           = AdcMskInRefDisable;
+    stcAdcCfg.enAdcAlign        = AdcAlignRight;
+    Adc_Init(&stcAdcCfg);
+}
 
 /* DAC init for generating waves */
 void App_DACInit(void)

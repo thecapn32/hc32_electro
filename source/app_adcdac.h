@@ -4,8 +4,8 @@
 /* init ADC module */
 void App_DACInit(void);
 /* DAC init for generating waves */
-void App_AdcInit(void);
-
+void App_AdcInit_scan(void);
+void App_AdcInit_sgl(void);
 /* DAC calibrate */
 void App_DacCali(void);
 

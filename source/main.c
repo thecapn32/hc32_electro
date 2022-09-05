@@ -354,7 +354,7 @@ static void check_state_signal(void)
     pause = 0;
     /* stop timer1 from running */
     Bt_M0_Stop(TIM1);
-    Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
+    Dac_SetChannelData(DacRightAlign, DacBit12, 0);
     Dac_SoftwareTriggerCmd();
     /* Turn of DC/DC */
     /* change device state */
@@ -485,9 +485,9 @@ int32_t main(void)
   /* System configuration */
   flash_init();
   setLpGpio();
-  // setActvGpio();
+  //setActvGpio();
   App_DACInit();
-  App_AdcInit();
+  App_AdcInit_scan();
   App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
@@ -502,7 +502,7 @@ int32_t main(void)
   //run = 1;
   //Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
 
-  // App_AdcInit();
+  //App_AdcInit();
   while (1)
   {
     check_state_signal();
