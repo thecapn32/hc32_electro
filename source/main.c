@@ -40,7 +40,7 @@ enum device_state_t
   TEST
 };
 /* This variable holds the corresponding state of device */
-volatile int state = WAKEUP;
+volatile int state = SLEEP;
 
 /* these variables are signals from interrupt tasks */
 volatile int wake = 0;
