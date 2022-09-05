@@ -537,7 +537,7 @@ int32_t main(void)
             if(test_cur_index > 3)
             {
               /*check if s\n is not written */
-              volatile uint8_t sn[8];
+              uint8_t sn[8];
               read_sn(sn);
               uart_sn_value(sn);
               uart_sn_print();
