@@ -261,12 +261,20 @@ static void check_state_signal(void)
     {
       /* set gpio pin modes enable necessary pins */
       setActvGpio();
+      buzz_beep(1000);
       // App_DacCali();
-      Gpio_ClrIO(buzzPort, buzzPin);
       Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+    } 
+    /* it was aborted */
+    else if(state == RUNNING) 
+    {
+      Bt_M0_Stop(TIM1);
+      buzz_beep(300);
+      delay1ms(500);
+      buzz_beep(300);
     }
     state = WAKEUP;
-    buzz_beep(1000);
+    
   }
   if (run)
   {
@@ -329,7 +337,7 @@ static void check_state_signal(void)
     Gpio_DisableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
     /* disable dac everything else running */
     /* change device state */
-
+    buzz_beep(1000);
     state = SLEEP;
     lowPowerGpios();
     Lpm_GotoDeepSleep(FALSE);
@@ -449,11 +457,11 @@ int32_t main(void)
 	//App_AdcSglCfg();
 
   /* putting system to deepsleep */
-  //lowPowerGpios();
-  //Lpm_GotoDeepSleep(FALSE);
+  lowPowerGpios();
+  Lpm_GotoDeepSleep(FALSE);
   /* for testing */
   //run = 1;
-  Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+  //Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
 
   // App_AdcInit();
   while (1)

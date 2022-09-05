@@ -193,19 +193,19 @@ void PortB_IRQHandler(void)
     if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
     {
         /* this is for testing and setting device */
-        if(i)
-        {
-            Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
-            Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
-            test_mode = 1;
-            i = 0;
-        }
-        else
-        {
-            Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
-            Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
-            i = 1;
-        }
+        // if(i)
+        // {
+        //     Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
+        //     Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
+        //     test_mode = 1;
+        //     i = 0;
+        // }
+        // else
+        // {
+        //     Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
+        //     Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
+        //     i = 1;
+        // }
         if(state == WAKEUP) 
         {
             change_wave = 1;
