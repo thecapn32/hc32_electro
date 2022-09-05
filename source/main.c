@@ -332,12 +332,13 @@ static void check_state_signal(void)
     /* clear flag */
     sleep = 0;
     /* long beep */
-    Bt_M0_Stop(TIM0);
+    
     Bt_M0_Stop(TIM1);
     Gpio_DisableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
     /* disable dac everything else running */
     /* change device state */
     buzz_beep(1000);
+    Bt_M0_Stop(TIM0);
     state = SLEEP;
     lowPowerGpios();
     Lpm_GotoDeepSleep(FALSE);
