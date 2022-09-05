@@ -347,6 +347,9 @@ static void check_state_signal(void)
     pause = 0;
     /* stop timer1 from running */
     Bt_M0_Stop(TIM1);
+    Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
+    Dac_SoftwareTriggerCmd();
+    /* Turn of DC/DC */
     /* change device state */
     state = PAUSE;
     /* reset pause counter */
