@@ -313,7 +313,7 @@ static void check_state_signal(void)
       // check VBAT and VSEN and if okay start waves
       App_AdcJqrCfg();
       delay1ms(100);
-      if (1) // check_before_run())
+      if (check_before_run())
       {
         phase_index = 0;
         phase_cnt = 0;
@@ -502,8 +502,8 @@ int32_t main(void)
   setLpGpio();
   
   App_DACInit();
-  App_AdcInit_sgl();
-  //App_AdcInit_scan();
+  //App_AdcInit_sgl();
+  App_AdcInit_scan();
   //App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
