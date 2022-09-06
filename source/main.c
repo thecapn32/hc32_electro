@@ -124,8 +124,19 @@ static int check_before_run(void)
   float v = VBAT * (4.15 / 4095.0);
   float vt = T_SEN * (3.3 / 4095.0);
   float vs = V_SEN * (3.3 / 4095.0);
-  if (VBAT < 1040)
+  if (VBAT < 3300) {
     return 0;
+	}
+	if(VBAT > 4200)
+	{
+		int wave_flash = 0;
+		while(1)
+		{
+			Gpio_WriteOutputIO(lowChrgLedPort, lowChrgLedPin, wave_flash);
+          wave_flash = !wave_flash;
+			delay1ms(500);
+		}
+	}
   return 1;
 }
 
@@ -314,7 +325,7 @@ static void check_state_signal(void)
       
       App_AdcJqrCfg();
       delay1ms(100);
-      if (check_before_run())
+      if (1)//check_before_run())
       {
         phase_index = 0;
         phase_cnt = 0;
