@@ -509,8 +509,9 @@ int32_t main(void)
   App_Timer1Cfg();
   /* this functions are for calibration DAC */
   setActvGpio();
-  App_DacCali();
   App_AdcSglCfg();
+  App_DacCali();
+  
 
   /* putting system to deepsleep */
   lowPowerGpios();
