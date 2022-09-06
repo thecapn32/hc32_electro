@@ -500,7 +500,7 @@ int32_t main(void)
   /* System configuration */
   flash_init();
   setLpGpio();
-  // setActvGpio();
+  
   App_DACInit();
   App_AdcInit_sgl();
   //App_AdcInit_scan();
@@ -508,6 +508,7 @@ int32_t main(void)
   App_Timer0Cfg();
   App_Timer1Cfg();
   /* this functions are for calibration DAC */
+  setActvGpio();
   App_DacCali();
   App_AdcSglCfg();
 
