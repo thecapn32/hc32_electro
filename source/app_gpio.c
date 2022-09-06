@@ -22,8 +22,6 @@ void lowPowerGpios(void)
 {
     Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
 
-    //Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
-
     ///< make all pins digital
     M0P_GPIO->PAADS = 0;
     M0P_GPIO->PBADS = 0;
@@ -155,8 +153,8 @@ void setActvGpio(void)
 
     /* SEN_EN pin  */
     Gpio_Init(senEnPort, senEnPin, &stcGpioCfg);
-    //Gpio_SetIO(senEnPort, senEnPin);
-    Gpio_WriteOutputIO(senEnPort, senEnPin, 1);
+    Gpio_SetIO(senEnPort, senEnPin);
+    
     /* VBAT_SEN pin */
     Gpio_SetAnalogMode(vBatPort, vBatPin);
     /* T_SEN pin */
@@ -180,13 +178,12 @@ void PortB_IRQHandler(void)
     {
         /* this is timer0 callback function to recognise long press */
         onOff_count = 0;
-        /*  */
+        /* enable flag */
         onOff_interrupt = 1;
 		
         /* start timer0 */
         if(state == SLEEP) {
             Bt_M0_Run(TIM0);
-        
         }
         /* Clear interrupt */
         Gpio_ClearIrq(onOffPort, onOffPin);
@@ -195,20 +192,6 @@ void PortB_IRQHandler(void)
     /* if sw2 pin pressed */
     if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
     {
-        /* this is for testing and setting device */
-        // if(i)
-        // {
-        //     Gpio_SetIO(fullChrgLedPort, fullChrgLedPin);
-        //     Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
-        //     test_mode = 1;
-        //     i = 0;
-        // }
-        // else
-        // {
-        //     Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
-        //     Sysctrl_SetFunc(SysctrlSWDUseIOEn, FALSE);
-        //     i = 1;
-        // }
         if(state == WAKEUP) 
         {
             change_wave = 1;

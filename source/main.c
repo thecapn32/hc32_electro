@@ -263,20 +263,20 @@ void App_UartCfg(void)
   DDL_ZERO_STRUCT(stcMulti);
   DDL_ZERO_STRUCT(stcBaud);
 
-  Sysctrl_SetPeripheralGate(SysctrlPeripheralUart0, TRUE); // UART0外设模块时钟使能
+  Sysctrl_SetPeripheralGate(SysctrlPeripheralUart0, TRUE);
 
-  stcCfg.enRunMode = UartMskMode3;                //模式3
-  stcCfg.enStopBit = UartMsk1bit;                 // 1位停止位
-  stcCfg.enMmdorCk = UartMskEven;                 //偶校验
-  stcCfg.stcBaud.u32Baud = 9600;                  //波特率9600
-  stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;      //通道采样分频配置
-  stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq(); //获得外设时钟（PCLK）频率值
-  Uart_Init(M0P_UART0, &stcCfg);                  //串口初始化
+  stcCfg.enRunMode = UartMskMode3;
+  stcCfg.enStopBit = UartMsk1bit;
+  stcCfg.enMmdorCk = UartMskEven;
+  stcCfg.stcBaud.u32Baud = 9600; 
+  stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;
+  stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq();
+  Uart_Init(M0P_UART0, &stcCfg);
 
-  Uart_ClrStatus(M0P_UART0, UartRC);    //清接收请求
-  Uart_ClrStatus(M0P_UART0, UartTC);    //清发送请求
-  Uart_EnableIrq(M0P_UART0, UartRxIrq); //使能串口接收中断
-  Uart_EnableIrq(M0P_UART0, UartTxIrq); //使能串口发送中断
+  Uart_ClrStatus(M0P_UART0, UartRC);
+  Uart_ClrStatus(M0P_UART0, UartTC);
+  Uart_EnableIrq(M0P_UART0, UartRxIrq);
+  Uart_EnableIrq(M0P_UART0, UartTxIrq);
 }
 
 /* checking signal & change system state */
@@ -339,8 +339,6 @@ static void check_state_signal(void)
         Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
         /* must be set in every phase */
         Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-        // App_AdcSglCfg();
-        // Bt_M0_Run(TIM0);
         buzz_beep(300);
         delay1ms(500);
         buzz_beep(300);
@@ -361,7 +359,6 @@ static void check_state_signal(void)
       Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
       /* must be set in every phase */
       Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-      // App_AdcSglCfg();
       buzz_beep(300);
       delay1ms(500);
       buzz_beep(300);
@@ -392,8 +389,6 @@ static void check_state_signal(void)
   {
     /* clear flag */
     sleep = 0;
-    /* long beep */
-
     Bt_M0_Stop(TIM1);
     Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
     Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
@@ -441,7 +436,6 @@ static void check_state_signal(void)
     App_UartCfg();
     // enable uart and start listening
     state = TEST;
-    // Bt_M0_Run(TIM0); // running timer 0 for test
     test_cur_index = 0;
   }
 }
@@ -451,15 +445,7 @@ static void check_phase()
 {
   /* this counts number of times wave could run */
   phase_cnt++;
-  /* check if it is passed half of phase duration for now disable can't produce negative current*/
-  // if (phase_cnt >= phase_cnt_target * 50)
-  // {
-  //   /* dac value should be changed to positive current */
-  //   if (freq[phase_index] != 0)
-  //   {
-  //     logic1 = dac_16Val_pos[phase_index];
-  //   }
-  // }
+  /* check if end of duration */
   if (phase_cnt == phase_cnt_target * 100)
   {
     /* Here should be where the values must be changed for running next phase */
@@ -514,25 +500,13 @@ int32_t main(void)
   setLpGpio();
   
   App_DACInit();
-  //App_AdcInit_sgl();
   App_AdcInit_scan();
-  //App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
-  /* this functions are for calibration DAC */
-  // setActvGpio();
-  // App_AdcSglCfg();
-  // App_DacCali();
-  
 
   /* putting system to deepsleep */
   lowPowerGpios();
   Lpm_GotoDeepSleep(FALSE);
-  /* for testing */
-  // run = 1;
-  // Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
-
-  // App_AdcInit();
 
   while (1)
   {
@@ -657,9 +631,7 @@ int32_t main(void)
                 }
                 Uart_SendDataPoll(M0P_UART0, '\n');
                 Uart_SendDataPoll(M0P_UART0, '\r');
-                /* save s/n wrote in flash so next time don't run it again 
-                ';
-                '*/
+                /* save s/n wrote in flash so next time don't run it again */
                 Flash_WriteByte(flash_Addr + 8, 0x53);
                 read_sn(sn);
                 uart_sn_value(sn); 
