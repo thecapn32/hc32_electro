@@ -506,9 +506,9 @@ int32_t main(void)
   //App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
-
-  // App_DacCali();
-  // App_AdcSglCfg();
+  /* this functions are for calibration DAC */
+  App_DacCali();
+  App_AdcSglCfg();
 
   /* putting system to deepsleep */
   lowPowerGpios();
