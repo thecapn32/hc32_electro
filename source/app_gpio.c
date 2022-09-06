@@ -155,8 +155,8 @@ void setActvGpio(void)
 
     /* SEN_EN pin  */
     Gpio_Init(senEnPort, senEnPin, &stcGpioCfg);
-    Gpio_SetIO(senEnPort, senEnPin);
-
+    //Gpio_SetIO(senEnPort, senEnPin);
+    Gpio_WriteOutputIO(senEnPort, senEnPin, 1);
     /* VBAT_SEN pin */
     Gpio_SetAnalogMode(vBatPort, vBatPin);
     /* T_SEN pin */

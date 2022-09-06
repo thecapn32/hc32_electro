@@ -311,6 +311,7 @@ static void check_state_signal(void)
     if (state == WAKEUP)
     {
       // check VBAT and VSEN and if okay start waves
+      
       App_AdcJqrCfg();
       delay1ms(100);
       if (check_before_run())
