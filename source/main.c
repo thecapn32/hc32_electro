@@ -502,7 +502,8 @@ int32_t main(void)
   setLpGpio();
   // setActvGpio();
   App_DACInit();
-  App_AdcInit_scan();
+  App_AdcInit_sgl();
+  //App_AdcInit_scan();
   //App_UartCfg();
   App_Timer0Cfg();
   App_Timer1Cfg();
