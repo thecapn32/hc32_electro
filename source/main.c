@@ -650,9 +650,9 @@ int32_t main(void)
                 '*/
                 Flash_WriteByte(flash_Addr + 8, 0x53);
                 read_sn(sn);
-                uart_sn_value(sn);
-                test_cur_index = 0;
+                uart_sn_value(sn); 
               }
+              test_cur_index = 0;
             }
           }
           else if(u8TxData[0] == 'A')
