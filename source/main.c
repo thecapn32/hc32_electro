@@ -83,14 +83,14 @@ const uint16_t freq[18] = {13, 0, 16, 0, 26, 0, 390, 0, 781, 0, 0xffff, 0, 781, 
 //                       {600, , 500, , 300, 0,  20, 0,  10, 0,    0.1, ,  10,  0.8,  0.3,  ,   100, 5
 const uint32_t dacCur_r[18] = {20, 0, 20, 0, 20, 0, 100, 0, 20, 0, 80, 0, 50, 80, 50, 0, 50, 100};
 
-const uint16_t dac_16Val_pos[18] = {2203, 1975, 2203, 1975, 2203, 1975, 3015, 1975, 2203,
-                                    1975, 2796, 1975, 2532, 2796, 2532, 1975, 2532, 3015};
+const uint16_t dac_16Val_pos[18] = {2156, 1952, 2156, 1952, 2156, 1952, 2993, 1952, 2156,
+                                    1952, 2783, 1952, 2465, 2783, 2465, 1952, 2465, 2993};
 // have an array for first time
 const int dacCur[9] = {-100, -80, -50, -20, 0, 20, 50, 80, 100};
 
 uint16_t dacCal[9] = {752, 958, 1288, 1597, 1816, 2081, 4090, 4090, 4090};
 
-const uint16_t test_cur[4] = {1975, 2532, 3015, 4090};
+const uint16_t test_cur[4] = {1952, 2465, 2993, 3500};
 
 volatile uint32_t VBAT;
 volatile uint32_t V_SEN;
@@ -508,9 +508,9 @@ int32_t main(void)
   App_Timer0Cfg();
   App_Timer1Cfg();
   /* this functions are for calibration DAC */
-  setActvGpio();
-  App_AdcSglCfg();
-  App_DacCali();
+  // setActvGpio();
+  // App_AdcSglCfg();
+  // App_DacCali();
   
 
   /* putting system to deepsleep */
