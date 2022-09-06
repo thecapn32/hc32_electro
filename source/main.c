@@ -124,7 +124,7 @@ static int check_before_run(void)
   float v = VBAT * (4.15 / 4095.0);
   float vt = T_SEN * (3.3 / 4095.0);
   float vs = V_SEN * (3.3 / 4095.0);
-  if (v < 3.4)
+  if (VBAT < 1040)
     return 0;
   return 1;
 }
