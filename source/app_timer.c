@@ -87,12 +87,14 @@ void Tim1_IRQHandler(void)
             i++;
             Dac_SetChannelData(DacRightAlign, DacBit12, logic1);
             Dac_SoftwareTriggerCmd();
+            //measure current if value change is larger than 20% percent abort
         }
         else
         {
             i = 0;
             Dac_SetChannelData(DacRightAlign, DacBit12, logic0);
             Dac_SoftwareTriggerCmd();
+            //measure current if value change is larger than 20% percent abort
         }
         Bt_ClearIntFlag(TIM1, BtUevIrq);
     }

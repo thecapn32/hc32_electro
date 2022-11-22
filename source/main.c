@@ -322,11 +322,12 @@ static void check_state_signal(void)
     if (state == WAKEUP)
     {
       // check VBAT and VSEN and if okay start waves
-      
+
       App_AdcJqrCfg();
       delay1ms(100);
       if (1)//check_before_run())
       {
+        /* Calibrate current values here */
         phase_index = 0;
         phase_cnt = 0;
         phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
@@ -503,7 +504,6 @@ int32_t main(void)
   App_AdcInit_scan();
   App_Timer0Cfg();
   App_Timer1Cfg();
-
   /* putting system to deepsleep */
   lowPowerGpios();
   Lpm_GotoDeepSleep(FALSE);
