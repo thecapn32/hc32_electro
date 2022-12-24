@@ -487,8 +487,10 @@ static void check_phase()
   }
 }
 
+
 int32_t main(void)
 {
+	
   /* init gpios that are active in deep sleep mode */
   App_ClkCfg();
 
@@ -496,18 +498,28 @@ int32_t main(void)
   int wave_flash_cnt = 0;
 
   /* System configuration */
-  flash_init();
-  setLpGpio();
+  //flash_init();
+  //setLpGpio();
   
-  App_DACInit();
-  App_AdcInit_scan();
-  App_Timer0Cfg();
-  App_Timer1Cfg();
+  //App_DACInit();
+  //App_AdcInit_scan();
+  //App_Timer0Cfg();
+  //App_Timer1Cfg();
 
   /* putting system to deepsleep */
-  lowPowerGpios();
-  Lpm_GotoDeepSleep(FALSE);
-
+  //lowPowerGpios();
+  //Lpm_GotoDeepSleep(FALSE);
+	
+	Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
+   stc_gpio_cfg_t stcGpioCfg;
+   stcGpioCfg.enDir = GpioDirOut;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuDisable;
+    stcGpioCfg.enPd = GpioPdDisable;
+		
+		Gpio_Init(GpioPortF, GpioPin7, &stcGpioCfg);
+		Gpio_SetIO(GpioPortF, GpioPin7);
+		led_setup();
   while (1)
   {
     check_state_signal();
@@ -729,4 +741,5 @@ int32_t main(void)
       }
     }
   }
+
 }

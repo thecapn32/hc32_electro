@@ -6,6 +6,10 @@
 #include "common.h"
 #include "app_pindef.h"
 
+#define QUICK_WAVE_LED 1
+#define STD_WAVE_LED 2
+#define DEEP_WAVE_LED 3
+
 extern volatile int state;
 
 extern volatile int wave;
@@ -16,6 +20,135 @@ extern volatile int buzz_en;
 /* for changing the selected wave */
 extern volatile int change_wave;
 extern volatile int test_mode;
+
+void turn_on_white(int ledNum)
+{
+    switch (ledNum)
+    {
+    case 1:
+        Gpio_ClrIO(led1RPort, led1RPin);
+        Gpio_ClrIO(led1GPort, led1GPin);
+        Gpio_ClrIO(led1BPort, led1BPin);
+        break;
+    case 2:
+        Gpio_ClrIO(led2RPort, led2RPin);
+        Gpio_ClrIO(led2GPort, led2GPin);
+        Gpio_ClrIO(led2BPort, led2BPin);
+        break;
+    case 3:
+        Gpio_ClrIO(led3RPort, led3RPin);
+        Gpio_ClrIO(led3GPort, led3GPin);
+        Gpio_ClrIO(led3BPort, led3BPin);
+        break;
+    }
+}
+
+void turn_off_led(int ledNum)
+{
+    switch (ledNum)
+    {
+    case 1:
+        Gpio_SetIO(led1RPort, led1RPin);
+        Gpio_SetIO(led1GPort, led1GPin);
+        Gpio_SetIO(led1BPort, led1BPin);
+        break;
+    case 2:
+        Gpio_SetIO(led2RPort, led2RPin);
+        Gpio_SetIO(led2GPort, led2GPin);
+        Gpio_SetIO(led2BPort, led2BPin);
+        break;
+    case 3:
+        Gpio_SetIO(led3RPort, led3RPin);
+        Gpio_SetIO(led3GPort, led3GPin);
+        Gpio_SetIO(led3BPort, led3BPin);
+        break;
+    }
+}
+
+void turn_on_red(int ledNum)
+{
+    switch (ledNum)
+    {
+    case 1:
+        Gpio_ClrIO(led1RPort, led1RPin);
+        Gpio_SetIO(led1GPort, led1GPin);
+        Gpio_SetIO(led1BPort, led1BPin);
+        break;
+    case 2:
+        Gpio_ClrIO(led2RPort, led2RPin);
+        Gpio_SetIO(led2GPort, led2GPin);
+        Gpio_SetIO(led2BPort, led2BPin);
+        break;
+    case 3:
+        Gpio_ClrIO(led3RPort, led3RPin);
+        Gpio_SetIO(led3GPort, led3GPin);
+        Gpio_SetIO(led3BPort, led3BPin);
+        break;
+    }
+}
+
+void blink_white(int ledNum)
+{
+    static int i = 0;
+    if (i)
+    {
+        turn_on_white(ledNum);
+        i = 1;
+    }
+    else
+    {
+        turn_off_led(ledNum);
+        i = 0;
+    }
+}
+
+void blink_red(int ledNum)
+{
+    static int i = 0;
+    if (i)
+    {
+        turn_on_red(ledNum);
+        i = 1;
+    }
+    else
+    {
+        turn_off_led(ledNum);
+        i = 0;
+    }
+}
+
+void led_setup(void)
+{
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
+    stc_gpio_cfg_t stcGpioCfg;
+    stcGpioCfg.enDir = GpioDirOut;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuDisable;
+    stcGpioCfg.enPd = GpioPdDisable;
+
+    Gpio_Init(led1RPort, led1RPin, &stcGpioCfg);
+    Gpio_Init(led1GPort, led1GPin, &stcGpioCfg);
+    Gpio_Init(led1BPort, led1BPin, &stcGpioCfg);
+
+    Gpio_Init(led2RPort, led2RPin, &stcGpioCfg);
+    Gpio_Init(led2GPort, led2GPin, &stcGpioCfg);
+    Gpio_Init(led2BPort, led2BPin, &stcGpioCfg);
+
+    Gpio_Init(led3RPort, led3RPin, &stcGpioCfg);
+    Gpio_Init(led3GPort, led3GPin, &stcGpioCfg);
+    Gpio_Init(led3BPort, led3BPin, &stcGpioCfg);
+
+    for (int i = 0; i < 4; i++)
+    {
+        blink_white(QUICK_WAVE_LED);
+        blink_white(STD_WAVE_LED);
+        blink_white(DEEP_WAVE_LED);
+        delay1ms(500);
+    }
+    turn_off_led(QUICK_WAVE_LED);
+    turn_off_led(STD_WAVE_LED);
+    turn_off_led(DEEP_WAVE_LED);
+}
 
 /* make all pins ready to enter low power mode */
 void lowPowerGpios(void)
@@ -80,7 +213,7 @@ void setLpGpio(void)
     stcGpioCfg.enDir = GpioDirIn;
     stcGpioCfg.enOD = GpioOdDisable;
     stcGpioCfg.enPu = GpioPuDisable;
-	stcGpioCfg.enPd = GpioPdEnable;
+	  stcGpioCfg.enPd = GpioPdEnable;
     Gpio_Init(chrgPort, chrgPin, &stcGpioCfg);
 
     /* configuring Full charge led */

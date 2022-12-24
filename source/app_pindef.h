@@ -14,6 +14,33 @@
 #define wavSelPort GpioPortB
 #define wavSelPin  GpioPin4
 
+#define led1RPort GpioPortA
+#define led1RPin GpioPin12
+
+#define led1GPort GpioPortA
+#define led1GPin GpioPin10
+
+#define led1BPort GpioPortA
+#define led1BPin GpioPin11
+
+#define led2RPort GpioPortA
+#define led2RPin GpioPin9
+
+#define led2BPort GpioPortA
+#define led2BPin GpioPin8
+
+#define led3GPort GpioPortB
+#define led3GPin GpioPin12
+
+#define led3BPort GpioPortB
+#define led3BPin GpioPin13
+
+#define led3RPort GpioPortB
+#define led3RPin GpioPin14
+
+#define led2GPort GpioPortB
+#define led2GPin GpioPin15
+
 /* Digital OUTPUTS */
 #define buzzPort GpioPortA
 #define buzzPin  GpioPin15
