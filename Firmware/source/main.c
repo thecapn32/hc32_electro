@@ -30,7 +30,7 @@
 #include "app_adcdac.h"
 #include "app_uart.h"
 
-//#include "common.h"
+#include "common.h"
 enum device_state_t
 {
   SLEEP,
@@ -65,7 +65,7 @@ volatile uint16_t logic1 = 4000;
 /* selected wave to run */
 // wave 0 = long wave
 // wave 1 = short wave
-volatile int wave = 0;
+volatile int wave = QUICK_WAVE_LED;
 
 /* for making buzzer beep */
 volatile int beep = 0;
@@ -96,7 +96,7 @@ volatile uint32_t VBAT;
 volatile uint32_t V_SEN;
 volatile uint32_t T_SEN;
 volatile uint32_t I_SEN;
-/*t*/
+
 /* for buzzer */
 
 volatile int onOff_count = 0;
@@ -166,92 +166,6 @@ void App_ClkCfg(void)
   Sysctrl_ClkSourceEnable(SysctrlClkRCL, FALSE);
 }
 
-/* take long press action according to device state */
-static void long_press_action()
-{
-  switch (state)
-  {
-  case WAKEUP:
-    sleep = 1;
-    break;
-  case RUNNING:
-    wake = 1;
-    break;
-  case SLEEP:
-    wake = 1;
-    break;
-  case PAUSE:
-    sleep = 1;
-    break;
-  case TEST:
-    sleep = 1;
-    break;
-  default:
-    break;
-  }
-}
-
-/* this function if for ON_OFF button */
-static void check_onoff(void)
-{
-  onOff_count++;
-  // if passed 3sec
-  if (onOff_count == 300) // period is 10ms
-  {
-     // disable timer interrupt function
-    onOff_interrupt = 0;
-    /* enter test mode */
-    if(state == SLEEP && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
-    {
-      test_mode = 1;
-    }
-    else
-    {
-      // take action acording to state
-      long_press_action();
-    }
-  }
-  // if pressed 1 sec check if sw1 is also pressed then changed
-  else if (state != SLEEP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(wavSelPort, wavSelPin)))
-  {
-    // disable timer interrupt function
-    onOff_interrupt = 0;
-    buzz_en = !buzz_en;
-  }
-  // if the button is released -> single click
-  else if (TRUE == Gpio_GetInputIO(onOffPort, onOffPin))
-  {
-    // disable timer interrupt function
-    onOff_interrupt = 0;
-    // if single click detected in sleep state go back to sleep
-    if (state == SLEEP)
-    {
-      sleep = 1;
-    }
-    else if (state == WAKEUP || state == PAUSE)
-    {
-      run = 1;
-    }
-    else if (state == RUNNING)
-    {
-      pause = 1;
-    }
-  }
-}
-
-/* make buzzer sound t ms */
-static void buzz_beep(int t)
-{
-  if (buzz_en)
-  {
-    beep = 1;
-    delay1ms(t);
-    beep = 0;
-    delay1ms(1);
-    Gpio_ClrIO(buzzPort, buzzPin);
-  }
-}
-
 /* uart configuration */
 void App_UartCfg(void)
 {
@@ -286,28 +200,18 @@ static void check_state_signal(void)
   {
     /* clear flag */
     wake = 0;
-    if (wave == 0)
-    {
-      Gpio_SetIO(wav0LedPort, wav0LedPin);
-      Gpio_ClrIO(wav1LedPort, wav1LedPin);
-    }
-    else
-    {
-      Gpio_ClrIO(wav0LedPort, wav0LedPin);
-      Gpio_SetIO(wav1LedPort, wav1LedPin);
-    }
-
     if (state == SLEEP)
     {
       /* set gpio pin modes enable necessary pins */
-      setActvGpio();
-      buzz_beep(1000);
-      // App_DacCali();
-      Gpio_EnableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+      //setActvGpio();
+      led_setup();
+      buzz_beep(500);
+      Gpio_EnableIrq(sw2Port, sw2Pin, GpioIrqFalling);
     }
     /* it was aborted */
     else if (state == RUNNING)
     {
+      /* this timer is for wave generation */
       Bt_M0_Stop(TIM1);
       buzz_beep(300);
       delay1ms(500);
@@ -322,7 +226,6 @@ static void check_state_signal(void)
     if (state == WAKEUP)
     {
       // check VBAT and VSEN and if okay start waves
-
       App_AdcJqrCfg();
       delay1ms(100);
       if (1)//check_before_run())
@@ -368,6 +271,7 @@ static void check_state_signal(void)
     /* make the wave led flash this change acording to state in timer0 callback */
     /* change device state */
     state = RUNNING;
+    /* here the selected wave white led should be always on */
   }
   if (pause)
   {
@@ -391,33 +295,17 @@ static void check_state_signal(void)
     /* clear flag */
     sleep = 0;
     Bt_M0_Stop(TIM1);
-    Gpio_ClrIO(fullChrgLedPort, fullChrgLedPin);
-    Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
-    Gpio_DisableIrq(wavSelPort, wavSelPin, GpioIrqFalling);
+    Gpio_DisableIrq(sw2Port, sw2Pin, GpioIrqFalling);
     /* disable dac everything else running */
     /* change device state */
-    buzz_beep(1000);
+    turn_off_led(QUICK_WAVE_LED);
+    turn_off_led(STD_WAVE_LED);
+    turn_off_led(DEEP_WAVE_LED);
+    buzz_beep(500);
     Bt_M0_Stop(TIM0);
     state = SLEEP;
-    lowPowerGpios();
-    Lpm_GotoDeepSleep(FALSE);
-  }
-  if (change_wave)
-  {
-    change_wave = 0;
-    buzz_beep(300);
-    if (wave == 0)
-    {
-      wave = 1;
-      Gpio_ClrIO(wav0LedPort, wav0LedPin);
-      Gpio_SetIO(wav1LedPort, wav1LedPin);
-    }
-    else
-    {
-      wave = 0;
-      Gpio_SetIO(wav0LedPort, wav0LedPin);
-      Gpio_ClrIO(wav1LedPort, wav1LedPin);
-    }
+    //lowPowerGpios();
+    //Lpm_GotoDeepSleep(FALSE);
   }
   if (test_mode)
   {
@@ -438,6 +326,26 @@ static void check_state_signal(void)
     // enable uart and start listening
     state = TEST;
     test_cur_index = 0;
+  }
+  if (change_wave)
+  {
+    change_wave = 0;
+    buzz_beep(300);
+    switch (wave)
+    {
+    case QUICK_WAVE_LED:
+      wave = STD_WAVE_LED;
+      break;
+    case STD_WAVE_LED:
+      wave = DEEP_WAVE_LED;
+      break;
+    case DEEP_WAVE_LED:
+      wave = QUICK_WAVE_LED;
+      break;
+    default:
+      wave = QUICK_WAVE_LED;
+      break;
+    }
   }
 }
 
@@ -488,7 +396,6 @@ static void check_phase()
   }
 }
 
-
 int32_t main(void)
 {
 	
@@ -499,26 +406,20 @@ int32_t main(void)
   int wave_flash_cnt = 0;
 
   /* System configuration */
-  //flash_init();
+  flash_init();
+  sw1_setup();
+  sw2_setup();
   //setLpGpio();
   
-<<<<<<< HEAD:source/main.c
   //App_DACInit();
   //App_AdcInit_scan();
-  //App_Timer0Cfg();
+  App_Timer0Cfg();
   //App_Timer1Cfg();
 
-=======
-  App_DACInit();
-  App_AdcInit_scan();
-  App_Timer0Cfg();
-  App_Timer1Cfg();
->>>>>>> 790f4414e5ef35686ca8d2fa88af609a943d7930:Firmware/source/main.c
   /* putting system to deepsleep */
   //lowPowerGpios();
   //Lpm_GotoDeepSleep(FALSE);
 	
-		//led_setup();
   while (1)
   {
     check_state_signal();
@@ -531,6 +432,16 @@ int32_t main(void)
       {
         check_onoff();
       }
+      /* if device is in wakeup mode check if there is no instruction for */
+      if(state == WAKEUP)
+      {
+        wave_flash_cnt++;
+        if (wave_flash_cnt >= 50)
+        { 
+          wave_flash_cnt = 0;
+          blink_white(wave);
+        }
+      }
       /* if device is in running state */
       if (state == RUNNING)
       {
@@ -540,16 +451,7 @@ int32_t main(void)
         if (wave_flash_cnt >= 30)
         {
           wave_flash_cnt = 0;
-          if (wave)
-          {
-            Gpio_WriteOutputIO(wav1LedPort, wav1LedPin, wave_flash);
-            wave_flash = !wave_flash;
-          }
-          else
-          {
-            Gpio_WriteOutputIO(wav0LedPort, wav0LedPin, wave_flash);
-            wave_flash = !wave_flash;
-          }
+          
         }
       }
       /* if device is in pause state */

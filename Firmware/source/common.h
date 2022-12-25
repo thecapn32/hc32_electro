@@ -3,6 +3,9 @@
 
 #include "ddl.h"
 
+#define QUICK_WAVE_LED 1
+#define STD_WAVE_LED 2
+#define DEEP_WAVE_LED 3
 
 enum device_state_t {SLEEP, WAKEUP, RUNNING, PAUSE};
 

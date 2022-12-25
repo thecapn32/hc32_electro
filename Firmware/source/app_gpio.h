@@ -19,4 +19,12 @@ void turn_off_led(int ledNum);
 
 void turn_on_white(int ledNum);
 
+void buzzer_setup(void);
+
+void sw1_setup(void);
+
+void sw2_setup(void);
+
+void check_onoff(void);
+
 #endif

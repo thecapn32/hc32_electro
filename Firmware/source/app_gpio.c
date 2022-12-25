@@ -6,10 +6,6 @@
 #include "common.h"
 #include "app_pindef.h"
 
-#define QUICK_WAVE_LED 1
-#define STD_WAVE_LED 2
-#define DEEP_WAVE_LED 3
-
 extern volatile int state;
 
 extern volatile int wave;
@@ -19,8 +15,10 @@ extern volatile int onOff_interrupt;
 extern volatile int buzz_en;
 /* for changing the selected wave */
 extern volatile int change_wave;
+
 extern volatile int test_mode;
 
+/* turning on white of specified led */
 void turn_on_white(int ledNum)
 {
     switch (ledNum)
@@ -43,6 +41,7 @@ void turn_on_white(int ledNum)
     }
 }
 
+/* turning off specified led */
 void turn_off_led(int ledNum)
 {
     switch (ledNum)
@@ -65,6 +64,7 @@ void turn_off_led(int ledNum)
     }
 }
 
+/* turning on red of specified led */
 void turn_on_red(int ledNum)
 {
     switch (ledNum)
@@ -87,36 +87,39 @@ void turn_on_red(int ledNum)
     }
 }
 
+/* blinking white of specified led */
 void blink_white(int ledNum)
 {
     static int i = 0;
     if (i)
     {
         turn_on_white(ledNum);
-        i = 1;
+        i = 0;
     }
     else
     {
         turn_off_led(ledNum);
-        i = 0;
+        i = 1;
     }
 }
 
+/* blinking red of specified led */
 void blink_red(int ledNum)
 {
     static int i = 0;
     if (i)
     {
         turn_on_red(ledNum);
-        i = 1;
+        i = 0;
     }
     else
     {
         turn_off_led(ledNum);
-        i = 0;
+        i = 1;
     }
 }
 
+/* 9 led pin definition */
 void led_setup(void)
 {
     Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
@@ -148,6 +151,23 @@ void led_setup(void)
     turn_off_led(QUICK_WAVE_LED);
     turn_off_led(STD_WAVE_LED);
     turn_off_led(DEEP_WAVE_LED);
+    /* set selected wave to default */
+    wave = QUICK_WAVE_LED;
+}
+
+/* buzzer pin definition */
+void buzzer_setup(void)
+{
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralDac, TRUE);
+    stc_gpio_cfg_t stcGpioCfg;
+
+    /* Configuring base_out pin */
+    stcGpioCfg.enDir = GpioDirOut;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuDisable;
+    stcGpioCfg.enPd = GpioPdDisable;
+    Gpio_Init(buzzPort, buzzPin, &stcGpioCfg);
+    Gpio_ClrIO(buzzPort, buzzPin);
 }
 
 /* make all pins ready to enter low power mode */
@@ -302,12 +322,84 @@ void setActvGpio(void)
     Gpio_SetAnalogMode(dacPort, dacPin);
 }
 
+/* take long press action according to device state */
+static void long_press_action()
+{
+  switch (state)
+  {
+  case WAKEUP:
+    sleep = 1;
+    break;
+  case RUNNING:
+    wake = 1;
+    break;
+  case SLEEP:
+    wake = 1;
+    break;
+  case PAUSE:
+    sleep = 1;
+    break;
+  case TEST:
+    sleep = 1;
+    break;
+  default:
+    break;
+  }
+}
+
+/* this function if for sw1 button */
+void check_onoff(void)
+{
+  onOff_count++;
+  // if passed 3sec
+  if (onOff_count == 300) // period is 10ms
+  {
+     // disable timer interrupt function
+    onOff_interrupt = 0;
+    /* enter test mode */
+    if(state == SLEEP && (FALSE == Gpio_GetInputIO(sw2Port, sw2Pin)))
+    {
+      test_mode = 1;
+    }
+    else
+    {
+      long_press_action();
+    }
+  }
+  // if pressed 1 sec check if sw1 is also pressed then changed
+  else if (state != SLEEP && onOff_count == 100 && (FALSE == Gpio_GetInputIO(sw2Port, sw2Pin)))
+  {
+    // disable timer interrupt function
+    onOff_interrupt = 0;
+    buzz_en = !buzz_en;
+  }
+  // if the button is released -> single click
+  else if (TRUE == Gpio_GetInputIO(sw1Port, sw1Pin))
+  {
+    // disable timer interrupt function
+    onOff_interrupt = 0;
+    // if single click detected in sleep state go back to sleep
+    if (state == SLEEP)
+    {
+      sleep = 1;
+    }
+    else if (state == WAKEUP || state == PAUSE)
+    {
+      run = 1;
+    }
+    else if (state == RUNNING)
+    {
+      pause = 1;
+    }
+  }
+}
+
 /* PortB interrupt handler */
 void PortB_IRQHandler(void)
 {
     static int i;
     /* if sw1(ON_OFF) pin pressed */
-    if(TRUE == Gpio_GetIrqStatus(onOffPort, onOffPin))
+    if(TRUE == Gpio_GetIrqStatus(sw1Port, sw1Pin))
     {
         /* this is timer0 callback function to recognise long press */
         onOff_count = 0;
@@ -319,20 +411,20 @@ void PortB_IRQHandler(void)
             Bt_M0_Run(TIM0);
         }
         /* Clear interrupt */
-        Gpio_ClearIrq(onOffPort, onOffPin);
+        Gpio_ClearIrq(sw1Port, sw1Pin);
     }
     
     /* if sw2 pin pressed */
-    if(TRUE == Gpio_GetIrqStatus(wavSelPort, wavSelPin))
+    if(TRUE == Gpio_GetIrqStatus(sw2Port, sw2Pin))
     {
         if(state == WAKEUP) 
         {
             change_wave = 1;
         }
-        Gpio_ClearIrq(wavSelPort, wavSelPin);
+        Gpio_ClearIrq(sw2Port, sw2Pin);
     }
     
-    /* chrg pin HIGH -> LOW */
+    /* chrg pin HIGH -> LOW */ //change this laterss
     if(TRUE == Gpio_GetIrqStatus(chrgPort, chrgPin))
     {
         Gpio_ClearIrq(chrgPort, chrgPin);
@@ -343,6 +435,36 @@ void PortB_IRQHandler(void)
         }
     }
 
+}
+
+/* setting up sw1 key and enabling interrupt */
+void sw1_setup(void)
+{
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
+    stc_gpio_cfg_t stcGpioCfg;
+    stcGpioCfg.enDir = GpioDirIn;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuEnable;
+    stcGpioCfg.enPd = GpioPdDisable;
+
+    Gpio_Init(sw1Port, sw1Pin, &stcGpioCfg);
+    /* this should be called only 1 time for both sw1 and sw2 */
+    EnableNvic(PORTB_IRQn, IrqLevel3, TRUE);
+    Gpio_EnableIrq(sw1Port, sw1Pin, GpioIrqFalling);
+}
+
+/* setting up sw2 key and enabling interrupt */
+void sw2_setup(void)
+{
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
+    stc_gpio_cfg_t stcGpioCfg;
+    stcGpioCfg.enDir = GpioDirIn;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuEnable;
+    stcGpioCfg.enPd = GpioPdDisable;
+
+    Gpio_Init(sw2Port, sw2Pin, &stcGpioCfg);
+    
 }
 
 /* PortC interrupt handler */

@@ -2,8 +2,11 @@
 #define APP_PINDEF_H_
 
 /* Digital INPUTS */
-#define onOffPort  GpioPortB
-#define onOffPin   GpioPin5
+#define sw1Port  GpioPortB
+#define sw1Pin   GpioPin5
+
+#define sw2Port  GpioPortB
+#define sw2Pin   GpioPin4
 
 #define chrgPort  GpioPortB
 #define chrgPin   GpioPin6
@@ -23,6 +26,9 @@
 #define led1BPort GpioPortA
 #define led1BPin GpioPin11
 
+#define led2GPort GpioPortB
+#define led2GPin GpioPin15
+
 #define led2RPort GpioPortA
 #define led2RPin GpioPin9
 
@@ -37,9 +43,6 @@
 
 #define led3RPort GpioPortB
 #define led3RPin GpioPin14
-
-#define led2GPort GpioPortB
-#define led2GPin GpioPin15
 
 /* Digital OUTPUTS */
 #define buzzPort GpioPortA
