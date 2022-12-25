@@ -510,16 +510,7 @@ int32_t main(void)
   //lowPowerGpios();
   //Lpm_GotoDeepSleep(FALSE);
 	
-	Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
-   stc_gpio_cfg_t stcGpioCfg;
-   stcGpioCfg.enDir = GpioDirOut;
-    stcGpioCfg.enOD = GpioOdDisable;
-    stcGpioCfg.enPu = GpioPuDisable;
-    stcGpioCfg.enPd = GpioPdDisable;
-		
-		Gpio_Init(GpioPortF, GpioPin7, &stcGpioCfg);
-		Gpio_SetIO(GpioPortF, GpioPin7);
-		led_setup();
+		//led_setup();
   while (1)
   {
     check_state_signal();
