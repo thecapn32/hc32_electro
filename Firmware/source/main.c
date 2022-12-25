@@ -31,14 +31,7 @@
 #include "app_uart.h"
 
 #include "common.h"
-enum device_state_t
-{
-  SLEEP,
-  WAKEUP,
-  RUNNING,
-  PAUSE,
-  TEST
-};
+
 /* This variable holds the corresponding state of device */
 volatile int state = SLEEP;
 

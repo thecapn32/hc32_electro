@@ -15,6 +15,11 @@ extern volatile int onOff_interrupt;
 extern volatile int buzz_en;
 /* for changing the selected wave */
 extern volatile int change_wave;
+extern volatile int wake;
+extern volatile int run;
+extern volatile int pause;
+extern volatile int sleep;
+extern volatile int change_wave;
 
 extern volatile int test_mode;
 
