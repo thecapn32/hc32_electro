@@ -199,7 +199,7 @@ static void check_state_signal(void)
       //setActvGpio();
       led_setup();
       buzzer_setup();
-      buzz_beep(500);
+      buzz_beep(LONG_BEEP_MS);
       Gpio_EnableIrq(sw2Port, sw2Pin, GpioIrqFalling);
     }
     /* it was aborted */
@@ -207,9 +207,9 @@ static void check_state_signal(void)
     {
       /* this timer is for wave generation */
       Bt_M0_Stop(TIM1);
-      buzz_beep(300);
+      buzz_beep(SHORT_BEEP_MS);
       delay1ms(500);
-      buzz_beep(300);
+      buzz_beep(SHORT_BEEP_MS);
     }
     state = WAKEUP;
   }
@@ -237,9 +237,9 @@ static void check_state_signal(void)
         Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
         /* must be set in every phase */
         Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-        buzz_beep(300);
+        buzz_beep(SHORT_BEEP_MS);
         delay1ms(500);
-        buzz_beep(300);
+        buzz_beep(SHORT_BEEP_MS);
         Bt_M0_Run(TIM1);
       }
       else
@@ -257,9 +257,9 @@ static void check_state_signal(void)
       Bt_M0_ARRSet(TIM1, 0x10000 - u16Period);
       /* must be set in every phase */
       Bt_M0_Cnt16Set(TIM1, 0x10000 - u16Period);
-      buzz_beep(300);
+      buzz_beep(SHORT_BEEP_MS);
       delay1ms(500);
-      buzz_beep(300);
+      buzz_beep(SHORT_BEEP_MS);
       Bt_M0_Run(TIM1);
     }
     /* make the wave led flash this change acording to state in timer0 callback */
@@ -280,9 +280,9 @@ static void check_state_signal(void)
     state = PAUSE;
     /* reset pause counter */
     pause_cnt = 0;
-    buzz_beep(300);
+    buzz_beep(SHORT_BEEP_MS);
     delay1ms(500);
-    buzz_beep(300);
+    buzz_beep(SHORT_BEEP_MS);
   }
   if (sleep)
   {
@@ -304,7 +304,7 @@ static void check_state_signal(void)
     turn_off_led(QUICK_WAVE_LED);
     turn_off_led(STD_WAVE_LED);
     turn_off_led(DEEP_WAVE_LED);
-    buzz_beep(500);
+    buzz_beep(LONG_BEEP_MS);
     //lowPowerGpios();
     //Lpm_GotoDeepSleep(FALSE);
   }
@@ -331,20 +331,25 @@ static void check_state_signal(void)
   if (change_wave)
   {
     change_wave = 0;
-    buzz_beep(300);
+    buzz_beep(SHORT_BEEP_MS);
     switch (wave)
     {
     case QUICK_WAVE_LED:
       wave = STD_WAVE_LED;
+      turn_off_led(QUICK_WAVE_LED);
       break;
     case STD_WAVE_LED:
       wave = DEEP_WAVE_LED;
+      turn_off_led(STD_WAVE_LED);
       break;
     case DEEP_WAVE_LED:
       wave = QUICK_WAVE_LED;
+      turn_off_led(DEEP_WAVE_LED);
       break;
     default:
       wave = QUICK_WAVE_LED;
+      turn_off_led(STD_WAVE_LED);
+      turn_off_led(DEEP_WAVE_LED);
       break;
     }
   }
@@ -479,7 +484,7 @@ int32_t main(void)
         /* if 15 min in pause */
         if (pause_cnt >= 90000)
         {
-          buzz_beep(500);
+          buzz_beep(LONG_BEEP_MS);
           sleep = 1;
         }
       }

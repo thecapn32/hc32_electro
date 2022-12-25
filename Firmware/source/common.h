@@ -7,6 +7,10 @@
 #define STD_WAVE_LED 2
 #define DEEP_WAVE_LED 3
 
+#define LONG_BEEP_MS 500
+
+#define SHORT_BEEP_MS 300
+
 enum device_state_t {SLEEP, WAKEUP, RUNNING, PAUSE, TEST};
 
 extern const uint32_t l_duration[18];

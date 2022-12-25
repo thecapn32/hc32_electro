@@ -45,8 +45,8 @@
 #define led3RPin GpioPin14
 
 /* Digital OUTPUTS */
-#define buzzPort GpioPortA
-#define buzzPin  GpioPin15
+#define buzzPort GpioPortB
+#define buzzPin  GpioPin11
 
 #define wav0LedPort GpioPortA
 #define wav0LedPin  GpioPin10
