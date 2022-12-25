@@ -234,9 +234,9 @@ void setLpGpio(void)
     stcGpioCfg.enOD = GpioOdDisable;
     stcGpioCfg.enPu = GpioPuEnable;
     stcGpioCfg.enPd = GpioPdDisable;
-    Gpio_Init(onOffPort, onOffPin, &stcGpioCfg);
+    //Gpio_Init(onOffPort, onOffPin, &stcGpioCfg);
     EnableNvic(PORTB_IRQn, IrqLevel3, TRUE);
-    Gpio_EnableIrq(onOffPort, onOffPin, GpioIrqFalling);
+    //Gpio_EnableIrq(onOffPort, onOffPin, GpioIrqFalling);
 
     /* Configuring USB_DETECT pin */
     stcGpioCfg.enDir = GpioDirIn;
