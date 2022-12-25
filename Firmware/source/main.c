@@ -198,6 +198,7 @@ static void check_state_signal(void)
       /* set gpio pin modes enable necessary pins */
       //setActvGpio();
       led_setup();
+      buzzer_setup();
       buzz_beep(500);
       Gpio_EnableIrq(sw2Port, sw2Pin, GpioIrqFalling);
     }
@@ -291,12 +292,19 @@ static void check_state_signal(void)
     Gpio_DisableIrq(sw2Port, sw2Pin, GpioIrqFalling);
     /* disable dac everything else running */
     /* change device state */
+    Bt_M0_Stop(TIM0);
+    state = SLEEP;
+    for (int i = 0; i < 4; i++)
+    {
+        blink_white(QUICK_WAVE_LED);
+        blink_white(STD_WAVE_LED);
+        blink_white(DEEP_WAVE_LED);
+        delay1ms(500);
+    }
     turn_off_led(QUICK_WAVE_LED);
     turn_off_led(STD_WAVE_LED);
     turn_off_led(DEEP_WAVE_LED);
     buzz_beep(500);
-    Bt_M0_Stop(TIM0);
-    state = SLEEP;
     //lowPowerGpios();
     //Lpm_GotoDeepSleep(FALSE);
   }
