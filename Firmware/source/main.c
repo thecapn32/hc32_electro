@@ -471,7 +471,7 @@ int32_t main(void)
         /* if 15 min in pause */
         if (pause_cnt >= 90000)
         {
-          buzz_beep(1000);
+          buzz_beep(500);
           sleep = 1;
         }
       }

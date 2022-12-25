@@ -7,13 +7,11 @@
 #define STD_WAVE_LED 2
 #define DEEP_WAVE_LED 3
 
-enum device_state_t {SLEEP, WAKEUP, RUNNING, PAUSE};
+enum device_state_t {SLEEP, WAKEUP, RUNNING, PAUSE, TEST};
 
 extern const uint32_t l_duration[18];
 
 extern const uint32_t s_duration[18];
-
-extern const float freq[18];
 
 extern const uint32_t dacCur_r[18];
 

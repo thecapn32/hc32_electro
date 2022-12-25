@@ -13,6 +13,7 @@ extern volatile int onOff_count;
 extern volatile int onOff_interrupt;
 
 extern volatile int buzz_en;
+extern volatile int beep;
 /* for changing the selected wave */
 extern volatile int change_wave;
 extern volatile int wake;
@@ -22,6 +23,18 @@ extern volatile int sleep;
 extern volatile int change_wave;
 
 extern volatile int test_mode;
+
+void buzz_beep(int t)
+{
+  if (buzz_en)
+  {
+    beep = 1;
+    delay1ms(t);
+    beep = 0;
+    delay1ms(1);
+    Gpio_ClrIO(buzzPort, buzzPin);
+  }
+}
 
 /* turning on white of specified led */
 void turn_on_white(int ledNum)
@@ -507,3 +520,4 @@ void PortC_IRQHandler(void)
         Gpio_ClearIrq(usbPort, usbPin);
     }
 }
+
