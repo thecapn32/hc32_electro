@@ -33,7 +33,7 @@ extern volatile int adc_logic;
 void App_AdcInit_scan(void)
 {
     stc_adc_cfg_t stcAdcCfg;
-
+    
     DDL_ZERO_STRUCT(stcAdcCfg);
     Sysctrl_SetPeripheralGate(SysctrlPeripheralAdcBgr, TRUE);
     Bgr_BgrEnable();
@@ -68,6 +68,23 @@ void App_AdcInit_sgl(void)
 /* DAC init for generating waves */
 void App_DACInit(void)
 {
+
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralDac, TRUE);
+    stc_gpio_cfg_t stcGpioCfg;
+
+    /* Configuring base_out pin */
+    stcGpioCfg.enDir = GpioDirOut;
+    stcGpioCfg.enOD = GpioOdDisable;
+    stcGpioCfg.enPu = GpioPuDisable;
+    stcGpioCfg.enPd = GpioPdDisable;
+    Gpio_Init(baseOutPort, baseOutPin, &stcGpioCfg);
+    Gpio_ClrIO(baseOutPort, baseOutPin);
+    
+    Gpio_Init(pwrEnPort, pwrEnPin, &stcGpioCfg);
+    Gpio_SetIO(pwrEnPort, pwrEnPin);
+
+    Gpio_SetAnalogMode(dacPort, dacPin);
+    
     stc_dac_cfg_t dac_initstruct;
 
     Sysctrl_SetPeripheralGate(SysctrlPeripheralDac, TRUE);
@@ -181,7 +198,7 @@ void Adc_IRQHandler(void)
         float v0 = I_SEN * (2.471 / 4095.0);
         current = (v0 - 1.24) / 24.0 * 10000.0;
         /* sleep value 2 means ADC threshold passed */
-        sleep = 2;
+        //sleep = 2;
         Adc_SGL_Always_Stop();
     }
 }

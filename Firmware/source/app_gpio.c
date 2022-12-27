@@ -184,6 +184,7 @@ void buzzer_setup(void)
     stcGpioCfg.enOD = GpioOdDisable;
     stcGpioCfg.enPu = GpioPuDisable;
     stcGpioCfg.enPd = GpioPdDisable;
+    stcGpioCfg.enDrv = GpioDrvH;
     Gpio_Init(buzzPort, buzzPin, &stcGpioCfg);
     Gpio_ClrIO(buzzPort, buzzPin);
 }

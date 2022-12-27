@@ -56,8 +56,6 @@ volatile uint16_t logic1 = 4000;
 /* */
 
 /* selected wave to run */
-// wave 0 = long wave
-// wave 1 = short wave
 volatile int wave = QUICK_WAVE_LED;
 
 /* for making buzzer beep */
@@ -117,19 +115,20 @@ static int check_before_run(void)
   float v = VBAT * (4.15 / 4095.0);
   float vt = T_SEN * (3.3 / 4095.0);
   float vs = V_SEN * (3.3 / 4095.0);
-  if (VBAT < 3300) {
+  if (VBAT < 3300)
+  {
     return 0;
-	}
-	if(VBAT > 4200)
-	{
-		int wave_flash = 0;
-		while(1)
-		{
-			Gpio_WriteOutputIO(lowChrgLedPort, lowChrgLedPin, wave_flash);
-          wave_flash = !wave_flash;
-			delay1ms(500);
-		}
-	}
+  }
+  if (VBAT > 4200)
+  {
+    int wave_flash = 0;
+    while (1)
+    {
+      Gpio_WriteOutputIO(lowChrgLedPort, lowChrgLedPin, wave_flash);
+      wave_flash = !wave_flash;
+      delay1ms(500);
+    }
+  }
   return 1;
 }
 
@@ -175,7 +174,7 @@ void App_UartCfg(void)
   stcCfg.enRunMode = UartMskMode3;
   stcCfg.enStopBit = UartMsk1bit;
   stcCfg.enMmdorCk = UartMskEven;
-  stcCfg.stcBaud.u32Baud = 9600; 
+  stcCfg.stcBaud.u32Baud = 9600;
   stcCfg.stcBaud.enClkDiv = UartMsk8Or16Div;
   stcCfg.stcBaud.u32Pclk = Sysctrl_GetPClkFreq();
   Uart_Init(M0P_UART0, &stcCfg);
@@ -196,7 +195,7 @@ static void check_state_signal(void)
     if (state == SLEEP)
     {
       /* set gpio pin modes enable necessary pins */
-      //setActvGpio();
+      // setActvGpio();
       led_setup();
       buzzer_setup();
       buzz_beep(LONG_BEEP_MS);
@@ -217,17 +216,22 @@ static void check_state_signal(void)
   {
     /* clear flag */
     run = 0;
+    turn_on_white(wave);
+    // dac init
     if (state == WAKEUP)
     {
       // check VBAT and VSEN and if okay start waves
-      App_AdcJqrCfg();
+      // App_AdcJqrCfg();
+      App_DACInit();
+
       delay1ms(100);
-      if (1)//check_before_run())
+      if (1) // check_before_run())
       {
         /* Calibrate current values here */
         phase_index = 0;
         phase_cnt = 0;
-        phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
+        // phase_cnt_target = (wave == 0) ? l_duration[0] : s_duration[0];
+        phase_cnt_target = l_duration[0];
         /* set logic0 & logic 1 initial values */
         logic0 = dac_16Val_pos[1];
         logic1 = dac_16Val_pos[0];
@@ -242,11 +246,35 @@ static void check_state_signal(void)
         buzz_beep(SHORT_BEEP_MS);
         Bt_M0_Run(TIM1);
       }
+      // not enough power to run the wave
       else
       {
-        Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
-        delay1ms(5000);
-        Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
+        // Gpio_SetIO(lowChrgLedPort, lowChrgLedPin);
+        delay1ms(500);
+        buzz_beep(LONG_BEEP_MS);
+        turn_on_red(QUICK_WAVE_LED);
+        turn_on_red(STD_WAVE_LED);
+        turn_on_red(DEEP_WAVE_LED);
+
+        delay1ms(500);
+        buzz_beep(SHORT_BEEP_MS);
+        turn_off_led(QUICK_WAVE_LED);
+        turn_off_led(STD_WAVE_LED);
+        turn_off_led(DEEP_WAVE_LED);
+
+        delay1ms(500);
+        buzz_beep(LONG_BEEP_MS);
+        turn_on_red(QUICK_WAVE_LED);
+        turn_on_red(STD_WAVE_LED);
+        turn_on_red(DEEP_WAVE_LED);
+        delay1ms(500);
+
+        buzz_beep(SHORT_BEEP_MS);
+        turn_off_led(QUICK_WAVE_LED);
+        turn_off_led(STD_WAVE_LED);
+        turn_off_led(DEEP_WAVE_LED);
+        delay1ms(500);
+        // Gpio_ClrIO(lowChrgLedPort, lowChrgLedPin);
         sleep = 1;
       }
     }
@@ -296,17 +324,17 @@ static void check_state_signal(void)
     state = SLEEP;
     for (int i = 0; i < 4; i++)
     {
-        blink_white(QUICK_WAVE_LED);
-        blink_white(STD_WAVE_LED);
-        blink_white(DEEP_WAVE_LED);
-        delay1ms(500);
+      blink_white(QUICK_WAVE_LED);
+      blink_white(STD_WAVE_LED);
+      blink_white(DEEP_WAVE_LED);
+      delay1ms(500);
     }
     turn_off_led(QUICK_WAVE_LED);
     turn_off_led(STD_WAVE_LED);
     turn_off_led(DEEP_WAVE_LED);
     buzz_beep(LONG_BEEP_MS);
-    //lowPowerGpios();
-    //Lpm_GotoDeepSleep(FALSE);
+    // lowPowerGpios();
+    // Lpm_GotoDeepSleep(FALSE);
   }
   if (test_mode)
   {
@@ -316,13 +344,13 @@ static void check_state_signal(void)
     DDL_ZERO_STRUCT(stcGpioCfg);
     setActvGpio();
     Sysctrl_SetFunc(SysctrlSWDUseIOEn, TRUE);
-    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio,TRUE);
+    Sysctrl_SetPeripheralGate(SysctrlPeripheralGpio, TRUE);
     stcGpioCfg.enDir = GpioDirOut;
-    Gpio_Init(txPort,txPin,&stcGpioCfg);
-    Gpio_SetAfMode(txPort,txPin,GpioAf2);
+    Gpio_Init(txPort, txPin, &stcGpioCfg);
+    Gpio_SetAfMode(txPort, txPin, GpioAf2);
     stcGpioCfg.enDir = GpioDirIn;
-    Gpio_Init(rxPort,rxPin,&stcGpioCfg);
-    Gpio_SetAfMode(rxPort,rxPin,GpioAf2);
+    Gpio_Init(rxPort, rxPin, &stcGpioCfg);
+    Gpio_SetAfMode(rxPort, rxPin, GpioAf2);
     App_UartCfg();
     // enable uart and start listening
     state = TEST;
@@ -361,7 +389,11 @@ static void check_phase()
   /* this counts number of times wave could run */
   phase_cnt++;
   /* check if end of duration */
-  if (phase_cnt == phase_cnt_target * 100)
+  if (phase_cnt == phase_cnt_target * 50 && freq[phase_index] != 0)
+  {
+    Gpio_SetIO(baseOutPort, baseOutPin);
+  }
+  else if (phase_cnt == phase_cnt_target * 100)
   {
     /* Here should be where the values must be changed for running next phase */
     /* change dac values here */
@@ -370,7 +402,8 @@ static void check_phase()
     if (phase_index < 18)
     {
       phase_cnt = 0;
-      phase_cnt_target = (wave == 0) ? l_duration[phase_index] : s_duration[phase_index];
+      // phase_cnt_target = (wave == 0) ? l_duration[phase_index] : s_duration[phase_index];
+      phase_cnt_target = l_duration[phase_index];
       /* if phase frequency is 0 (pause phase) */
       if (freq[phase_index] == 0)
       {
@@ -404,7 +437,7 @@ static void check_phase()
 
 int32_t main(void)
 {
-	
+
   /* init gpios that are active in deep sleep mode */
   App_ClkCfg();
 
@@ -414,18 +447,18 @@ int32_t main(void)
   /* System configuration */
   flash_init();
   sw1_setup();
-  sw2_setup();
-  //setLpGpio();
-  
-  //App_DACInit();
-  //App_AdcInit_scan();
+  sw2_setup(); // this must be called after board wakeup
+  // setLpGpio();
+
+  // App_DACInit();
+  // App_AdcInit_scan();
   App_Timer0Cfg();
-  //App_Timer1Cfg();
+  App_Timer1Cfg();
 
   /* putting system to deepsleep */
-  //lowPowerGpios();
-  //Lpm_GotoDeepSleep(FALSE);
-	
+  // lowPowerGpios();
+  // Lpm_GotoDeepSleep(FALSE);
+
   while (1)
   {
     check_state_signal();
@@ -439,11 +472,11 @@ int32_t main(void)
         check_onoff();
       }
       /* if device is in wakeup mode check if there is no instruction for */
-      if(state == WAKEUP)
+      if (state == WAKEUP)
       {
         wave_flash_cnt++;
         if (wave_flash_cnt >= 50)
-        { 
+        {
           wave_flash_cnt = 0;
           blink_white(wave);
         }
@@ -451,14 +484,10 @@ int32_t main(void)
       /* if device is in running state */
       if (state == RUNNING)
       {
+        /* here it must scan adc channels */
+        /* two initialatin channels for one for only sensing current */
+        /* one for sensing vbat temperature */
         check_phase();
-        /* flash selected wave led */
-        wave_flash_cnt++;
-        if (wave_flash_cnt >= 30)
-        {
-          wave_flash_cnt = 0;
-          
-        }
       }
       /* if device is in pause state */
       if (state == PAUSE)
@@ -491,7 +520,7 @@ int32_t main(void)
       /* if device is in test state */
       if (state == TEST)
       {
-        //change swd pins to uart
+        // change swd pins to uart
         u8TxData[0] = uart_read();
         /* got no data */
         if (u8TxData[0] != 0xff)
@@ -509,7 +538,7 @@ int32_t main(void)
               /*check if s\n is not written */
               uint8_t sn[8];
               sn[0] = *((volatile uint8_t *)flash_Addr + 8);
-              if(sn[0] != 0x53)
+              if (sn[0] != 0x53)
               {
                 /* get s/n value from uart in hex base and store it in flash */
                 read_sn(sn);
@@ -553,12 +582,12 @@ int32_t main(void)
                 /* save s/n wrote in flash so next time don't run it again */
                 Flash_WriteByte(flash_Addr + 8, 0x53);
                 read_sn(sn);
-                uart_sn_value(sn); 
+                uart_sn_value(sn);
               }
               test_cur_index = 0;
             }
           }
-          else if(u8TxData[0] == 'A')
+          else if (u8TxData[0] == 'A')
           {
             Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
             u8TxData[0] = 0xff;
@@ -570,30 +599,30 @@ int32_t main(void)
             while (1)
             {
               u8TxData[0] = uart_read();
-              if(u8TxData[0] != 0xff)
+              if (u8TxData[0] != 0xff)
               {
                 Uart_SendDataPoll(M0P_UART0, u8TxData[0]);
                 timeout = 0;
-                if(u8TxData[0] == FW[i])
+                if (u8TxData[0] == FW[i])
                 {
                   i++;
-                  if(i == 5)
+                  if (i == 5)
                   {
                     flag = 1;
                     break;
                   }
-                } 
-                else if(i < 4 && u8TxData[0] == SN[i])
+                }
+                else if (i < 4 && u8TxData[0] == SN[i])
                 {
                   i++;
-                  if(i == 4)
+                  if (i == 4)
                   {
                     flag = 2;
                     break;
                   }
                 }
                 // wrong command
-                else 
+                else
                 {
                   flag = 0;
                   break;
@@ -601,30 +630,30 @@ int32_t main(void)
               }
               delay1ms(10);
               timeout++;
-              if(timeout == 300)
+              if (timeout == 300)
                 break;
             }
-            Uart_SendDataPoll(M0P_UART0,'\n');
-            Uart_SendDataPoll(M0P_UART0,'\r');
-            if(flag == 1)
+            Uart_SendDataPoll(M0P_UART0, '\n');
+            Uart_SendDataPoll(M0P_UART0, '\r');
+            if (flag == 1)
             {
-              //print version number
-              Uart_SendDataPoll(M0P_UART0,'V');
-              Uart_SendDataPoll(M0P_UART0,'0');
-              Uart_SendDataPoll(M0P_UART0,'.');
-              Uart_SendDataPoll(M0P_UART0,'0');
-              Uart_SendDataPoll(M0P_UART0,'\n');
-              Uart_SendDataPoll(M0P_UART0,'\r');
+              // print version number
+              Uart_SendDataPoll(M0P_UART0, 'V');
+              Uart_SendDataPoll(M0P_UART0, '0');
+              Uart_SendDataPoll(M0P_UART0, '.');
+              Uart_SendDataPoll(M0P_UART0, '0');
+              Uart_SendDataPoll(M0P_UART0, '\n');
+              Uart_SendDataPoll(M0P_UART0, '\r');
             }
-            else if(flag == 2)
+            else if (flag == 2)
             {
-              //print SN value
+              // print SN value
               uint8_t sn[8];
               read_sn(sn);
               uart_sn_value(sn);
             }
           }
-        } 
+        }
         /* timer to check if it is passed 30 in test mode */
         wave_flash_cnt++;
         if (wave_flash_cnt >= 70)
@@ -648,5 +677,4 @@ int32_t main(void)
       }
     }
   }
-
 }

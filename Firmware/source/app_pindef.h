@@ -45,6 +45,10 @@
 #define led3RPin GpioPin14
 
 /* Digital OUTPUTS */
+
+#define baseOutPort GpioPortB
+#define baseOutPin  GpioPin2
+
 #define buzzPort GpioPortB
 #define buzzPin  GpioPin11
 
@@ -63,8 +67,8 @@
 #define lowChrgLedPort GpioPortA
 #define lowChrgLedPin GpioPin9
 
-#define pwrEnPort GpioPortB
-#define pwrEnPin  GpioPin3
+#define pwrEnPort GpioPortF
+#define pwrEnPin  GpioPin7
 
 #define refEnPort GpioPortF
 #define refEnPin GpioPin1
